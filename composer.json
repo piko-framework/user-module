@@ -10,9 +10,9 @@
 	"license": "LGPL-3.0",
 	"require": {
 		"php": ">=5.6.0",
-		"ilhooq/piko": "*",
-		"ilhooq/piko-ui": "@dev",
-		"ilhooq/piko-datatable": "@dev",
+		"ilhooq/piko": "^0.8",
+		"ilhooq/piko-ui": "^0.1",
+		"ilhooq/piko-datatable": "^0.1",
 		"nette/mail": "^2.4",
 		"nette/utils": "^2.5"
 	},
