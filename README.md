@@ -1,6 +1,6 @@
 # Piko user module
 
-User management module for [Piko](https://piko-framework.github.io/)
+User management module for [Piko](https://piko-framework.github.io/) based projects.
 
 ## Features
 - Optional registration
@@ -15,7 +15,7 @@ User management module for [Piko](https://piko-framework.github.io/)
 1 - Install module via composer:
 
 ```bash
-composer require ilhooq/piko-user 
+composer require piko/user
 ```
 
 2 - Edit your Piko config :
@@ -42,7 +42,7 @@ composer require ilhooq/piko-user
 ]
 ```
 
-3 - Install module tables. Create a php at the root folder of your project (install.php) and put this code :
+3 - Install module tables. Create a php file at the root folder of your project (ex: install.php) and put this code :
 
 ```php
 require(__DIR__ . '/vendor/autoload.php');
@@ -53,7 +53,7 @@ require(__DIR__ . '/vendor/autoload.php');
 \piko\user\Module::createUser();
 ```
 
-4 - Execute install.php on the command line : `php install.php` and follow instructions to create the admin user
+4 - Execute install.php on the command line : `php install.php` and follow instructions to create the admin user.
 
 
 ## Routes
