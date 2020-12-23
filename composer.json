@@ -1,32 +1,32 @@
 {
-	"name": "ilhooq/piko-user",
-	"description": "Piko user management module.",
-	"keywords": [
+	"name" : "piko/user",
+	"description" : "Piko user management module.",
+	"keywords" : [
 		"user",
 		"piko",
 		"rbac",
 		"module"
 	],
-	"license": "LGPL-3.0",
-	"require": {
-		"php": ">=5.6.0",
-		"ilhooq/piko": "^0.8",
-		"ilhooq/piko-ui": "^0.1",
-		"ilhooq/piko-datatable": "^0.1",
-		"nette/mail": "^2.4",
-		"nette/utils": "^2.5"
+	"license" : "LGPL-3.0",
+	"require" : {
+		"php" : ">=5.6.0",
+		"piko/framework" : "^0.9",
+		"ilhooq/piko-ui" : "^0.3",
+		"ilhooq/piko-datatable" : "^0.3",
+		"nette/mail" : "^2.4",
+		"nette/utils" : "^2.5"
 	},
-	"require-dev": {
-		"phpunit/phpunit": "^6.5",
-		"squizlabs/php_codesniffer": "^3.4"
+	"require-dev" : {
+		"phpunit/phpunit" : "^6.5",
+		"squizlabs/php_codesniffer" : "^3.4"
 	},
-	"scripts": {
-		"tests": "phpunit",
-		"coding-standard": "phpcs --standard=./vendor/ilhooq/piko/coding-standard  --extensions=php --ignore='*/(vendor|views|messages)/*' .",
-		"coding-standard-fix": "phpcbf --standard=./vendor/ilhooq/piko/coding-standard  --extensions=php --ignore='*/(vendor|views|messages)/*' ."
+	"scripts" : {
+		"tests" : "phpunit",
+		"coding-standard" : "phpcs --standard=./vendor/ilhooq/piko/coding-standard  --extensions=php --ignore='*/(vendor|views|messages)/*' .",
+		"coding-standard-fix" : "phpcbf --standard=./vendor/ilhooq/piko/coding-standard  --extensions=php --ignore='*/(vendor|views|messages)/*' ."
 	},
-	"autoload": {
-		"psr-4": {
+	"autoload" : {
+		"psr-4" : {
 			"piko\\user\\" : ""
 		}
 	}
