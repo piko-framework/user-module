@@ -6,19 +6,31 @@
  * @license LGPL-3.0; see LICENSE.txt
  * @link https://github.com/piko-framework/piko-user
  */
-namespace piko\user\controllers;
+namespace Piko\UserModule\Controllers;
 
-use piko\Piko;
+use PDO;
+use Piko\UserModule;
 use piko\HttpException;
-use piko\user\models\User;
+use function Piko\I18n\__;
+use Piko\User as PikoUser;
+use Piko\UserModule\Models\User;
 
 /**
  * User default controller
  *
  * @author Sylvain PHILIP <contact@sphilip.com>
  */
-class DefaultController extends \piko\Controller
+class DefaultController extends \Piko\Controller
 {
+    protected PikoUser $user;
+    protected \PDO $db;
+
+    public function __construct(PikoUser $user, PDO $db)
+    {
+        $this->user = $user;
+        $this->db = $db;
+    }
+
     /**
      * Render and process user registration
      *
@@ -26,27 +38,28 @@ class DefaultController extends \piko\Controller
      */
     public function registerAction()
     {
-        /* @var $user \piko\User */
-        $user = Piko::get('user');
-
-        if (!$user->isGuest()) {
-            Piko::$app->redirect('/');
+        if (!$this->user->isGuest()) {
+            return $this->redirect('/');
         }
 
         $message = false;
+        $post = $this->request->getParsedBody();
 
-        if (!empty($_POST)) {
+        if (!empty($post)) {
 
-            $user = new User();
+            $module = $this->module;
+            assert ($module instanceof UserModule);
 
+            $user = new User($this->db);
             $user->scenario = User::SCENARIO_REGISTER;
+            $user->passwordMinLength = $module->passwordMinLength;
 
-            $user->bind($_POST);
+            $user->bind($post);
 
-            if ($user->validate() && $user->save()) {
-                $user->sendRegistrationConfirmation();
+            if ($user->isValid() && $user->save()) {
+                // $user->sendRegistrationConfirmation();
                 $message['type'] = 'success';
-                $message['content'] = Piko::t(
+                $message['content'] = __(
                     'user',
                     'Your account was created. Please activate it through the confirmation email that was sent to you.'
                 );
@@ -70,19 +83,22 @@ class DefaultController extends \piko\Controller
     {
         $errors = [];
         $this->layout = false;
+        $post = $this->request->getParsedBody();
 
-        if (!empty($_POST)) {
+        if (!empty($post)) {
 
-            $user = new User();
+            $module = $this->module;
+            assert ($module instanceof UserModule);
+
+            $user = new User($this->db);
             $user->scenario = 'register';
-            $user->bind($_POST);
-            $user->validate();
-            $errors = $user->errors;
+            $user->passwordMinLength = $module->passwordMinLength;
+            $user->bind($post);
+            $user->isValid();
+            $errors = $user->getErrors();
         }
 
-        header('Content-type: application/json');
-
-        return json_encode($errors);
+        return $this->jsonResponse($errors);
     }
 
     /**
@@ -91,9 +107,8 @@ class DefaultController extends \piko\Controller
      * @throws HttpException
      * @return string
      */
-    public function confirmationAction()
+    public function confirmationAction($token)
     {
-        $token = isset($_GET['token']) ? $_GET['token'] : '';
         $user = User::findByAuthKey($token);
 
         if (!$user) {
@@ -106,17 +121,17 @@ class DefaultController extends \piko\Controller
 
             if ($user->activate()) {
                 $message['type'] = 'success';
-                $message['content'] = Piko::t('user', 'Your account has been activated. You can now log in.');
+                $message['content'] = __('user', 'Your account has been activated. You can now log in.');
             } else {
                 $message['type'] = 'danger';
-                $message['content'] = Piko::t(
+                $message['content'] = __(
                     'user',
                     'Unable to activate your account. Please contact the site manager.'
                 );
             }
         } else {
             $message['type'] = 'warning';
-            $message['content'] = Piko::t('user', 'Your account has already been activated.');
+            $message['content'] = __('user', 'Your account has already been activated.');
         }
 
         return $this->render('login', ['message' => $message]);
@@ -130,7 +145,9 @@ class DefaultController extends \piko\Controller
     public function reminderAction()
     {
         $message = false;
-        $reminder = isset($_POST['reminder']) ? $_POST['reminder'] : '';
+        $post = $this->request->getParsedBody();
+
+        $reminder = $post['reminder']?? '';
 
         if (!empty($reminder)) {
 
@@ -141,16 +158,20 @@ class DefaultController extends \piko\Controller
             }
 
             if ($user) {
-                $user->sendResetPassword();
+                $app = $this->module->getApplication();
+                $router = $app->getComponent('Piko\Router');
+                $mailer = $app->getComponent('Nette\Mail\SmtpMailer');
+                $user->sendResetPassword($router, $mailer);
                 $message['type'] = 'success';
-                $message['content'] = Piko::t(
+                $message['content'] = __(
                     'user',
                     'A link has been sent to you by email ({email}). It will allow you to recreate your password.',
                     ['email' => $user->email]
                 );
+                $reminder = '';
             } else {
                 $message['type'] = 'danger';
-                $message['content'] = Piko::t('user', 'Account not found.');
+                $message['content'] = __('user', 'Account not found.');
             }
         }
 
@@ -166,26 +187,25 @@ class DefaultController extends \piko\Controller
      * @throws HttpException
      * @return string
      */
-    public function resetPasswordAction()
+    public function resetPasswordAction($token)
     {
-
-        $token = isset($_GET['token']) ? $_GET['token'] : '';
         $user = User::findByAuthKey($token);
 
         if (!$user) {
-            throw new HttpException('Not found', 404);
+            throw new HttpException('User not found', 404);
         }
 
         $message = false;
+        $post = $this->request->getParsedBody();
 
-        if (!empty($_POST)) {
+        if (!empty($post)) {
             $user->scenario = 'reset';
 
-            $user->bind($_POST);
+            $user->bind($post);
 
-            if ($user->validate() && $user->save()) {
+            if ($user->isValid() && $user->save()) {
                 $message['type'] = 'success';
-                $message['content'] = Piko::t('user', 'Your password has been successfully updated.');
+                $message['content'] = __('user', 'Your password has been successfully updated.');
             } else {
                 $message['type'] = 'danger';
                 $message['content'] = implode(', ', $user->errors);
@@ -206,27 +226,26 @@ class DefaultController extends \piko\Controller
      */
     public function editAction()
     {
-        /* @var $user \piko\User */
-        $user = Piko::get('user');
-
-        if (!$user->getId()) {
-            throw new HttpException(Piko::t('user', 'You must be logged to access this page.'), 401);
+        if ($this->user->isGuest()) {
+            throw new HttpException(__('user', 'You must be logged to access this page.'), 401);
         }
 
-        /* @var $identity User */
-        $identity = $user->getIdentity();
+        $identity = $this->user->getIdentity();
+
+        assert($identity instanceof User);
 
         $message = false;
+        $post = $this->request->getParsedBody();
 
-        if (!empty($_POST)) {
-            $identity->bind($_POST);
+        if (!empty($post)) {
+            $identity->bind($post);
 
-            if ($identity->validate() && $identity->save()) {
+            if ($identity->isValid() && $identity->save()) {
                 $message['type'] = 'success';
-                $message['content'] = Piko::t('user', 'Changes saved!');
+                $message['content'] = __('user', 'Changes saved!');
             } else {
                 $message['type'] = 'danger';
-                $message['content'] = implode(', ', $user->errors);
+                $message['content'] = implode(', ', $identity->getErrors());
             }
         }
 
@@ -244,24 +263,25 @@ class DefaultController extends \piko\Controller
     public function loginAction()
     {
         $message = false;
+        $post = $this->request->getParsedBody();
 
-        if (!empty($_POST)) {
-            $identity = User::findByUsername($_POST['username']);
+        if (!empty($post)) {
+            $identity = User::findByUsername($post['username']);
 
-            if ($identity instanceof User && $identity->validatePassword($_POST['password'])) {
+            if ($identity instanceof User && $identity->validatePassword($post['password'])) {
 
-                $user = Piko::get('user');
-                $user->login($identity);
-                $identity->last_login_at = time();
-                $identity->save();
+                $this->user->login($identity);
+                $identity->saveLoginTime();
 
-                return Piko::$app->redirect('/');
+                return $this->redirect('/');
 
             } else {
                 $message['type'] = 'danger';
-                $message['content'] = Piko::get('i18n')->translate('user', 'Authentication failure');
+                $message['content'] = __('user', 'Authentication failure');
             }
         }
+
+        assert($this->module instanceof UserModule);
 
         return $this->render('login', [
             'message' => $message,
@@ -274,8 +294,7 @@ class DefaultController extends \piko\Controller
      */
     public function logoutAction()
     {
-        $user = Piko::get('user');
-        $user->logout();
-        Piko::$app->redirect('/');
+        $this->user->logout();
+        $this->redirect('/');
     }
 }

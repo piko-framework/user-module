@@ -6,9 +6,9 @@
  * @license LGPL-3.0; see LICENSE.txt
  * @link https://github.com/piko-framework/piko-user
  */
-namespace piko\user;
+namespace Piko\Usermodule;
 
-use piko\user\models\User;
+use Piko\UserModule\Models\User;
 
 /**
  * Access checker class
@@ -17,6 +17,8 @@ use piko\user\models\User;
  */
 class AccessChecker
 {
+    private static $adminRole;
+
     /**
      * User roles
      *
@@ -31,6 +33,11 @@ class AccessChecker
      */
     private static $permissions = null;
 
+    public static function setAdminRole(string $role)
+    {
+        static::$adminRole = $role;
+    }
+
     /**
      * Check Permission or role access
      *
@@ -40,7 +47,7 @@ class AccessChecker
      *
      * @see \piko\User
      */
-    public function checkAccess($userId, string $permission) : bool
+    public static function checkAccess($userId, string $permission) : bool
     {
         $identity = User::findIdentity($userId);
 
@@ -48,6 +55,10 @@ class AccessChecker
 
             if (static::$roles === null) {
                 static::$roles = Rbac::getUserRoles($identity->id);
+            }
+
+            if (in_array(static::$adminRole, static::$roles)) {
+                return true;
             }
 
             if (in_array($permission, static::$roles)) {

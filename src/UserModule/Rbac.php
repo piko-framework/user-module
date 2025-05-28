@@ -6,9 +6,9 @@
  * @license LGPL-3.0; see LICENSE.txt
  * @link https://github.com/piko-framework/piko-user
  */
-namespace piko\user;
+namespace Piko\UserModule;
 
-use piko\Piko;
+use PDO;
 
 /**
  * Rbac utility class
@@ -17,6 +17,13 @@ use piko\Piko;
  */
 class Rbac
 {
+    protected static PDO $db;
+
+    public static function setPDO(PDO $db)
+    {
+        static::$db = $db;
+    }
+
     /**
      * Create a role
      *
@@ -26,15 +33,14 @@ class Rbac
      */
     public static function createRole($name, $description = '')
     {
-        $db = Piko::get('db');
         $query = 'INSERT INTO `auth_role` (`name`, `description`) VALUES (?, ?)';
 
-        $db->beginTransaction();
-        $st = $db->prepare($query);
+        static::$db->beginTransaction();
+        $st = static::$db->prepare($query);
         $st->execute([$name, $description]);
-        $db->commit();
+        static::$db->commit();
 
-        return $db->lastInsertId();
+        return static::$db->lastInsertId();
     }
 
     /**
@@ -45,8 +51,7 @@ class Rbac
      */
     public static function roleExists($name)
     {
-        $db = Piko::get('db');
-        $st = $db->prepare('SELECT COUNT(`id`) FROM `auth_role` WHERE `name` = :name');
+        $st = static::$db->prepare('SELECT COUNT(`id`) FROM `auth_role` WHERE `name` = :name');
         $st->execute(['name' => $name]);
 
         return ((int) $st->fetchColumn() > 0) ? true : false;
@@ -60,8 +65,7 @@ class Rbac
      */
     public static function getRoleId($name)
     {
-        $db = Piko::get('db');
-        $st = $db->prepare('SELECT `id` FROM `auth_role` WHERE `name` = :name');
+        $st = static::$db->prepare('SELECT `id` FROM `auth_role` WHERE `name` = :name');
         $st->execute(['name' => $name]);
 
         return (int) $st->fetchColumn();
@@ -82,13 +86,12 @@ class Rbac
             throw new \RuntimeException("Role $roleName doesn't exists");
         }
 
-        $db = Piko::get('db');
         $query = 'INSERT INTO `auth_assignment` (`role_id`, `user_id`) VALUES (?, ?)';
 
-        $db->beginTransaction();
-        $st = $db->prepare($query);
+        static::$db->beginTransaction();
+        $st = static::$db->prepare($query);
         $st->execute([$roleId, $userId]);
-        $db->commit();
+        static::$db->commit();
     }
 
     /**
@@ -99,12 +102,11 @@ class Rbac
      */
     public static function getUserRoles($userId)
     {
-        $db = Piko::get('db');
         $query = 'SELECT `auth_role`.`name` FROM `auth_role` '
                . 'INNER JOIN `auth_assignment` ON `auth_assignment`.`role_id` = `auth_role`.`id` '
                . 'WHERE `auth_assignment`.`user_id` = :user_id '
                . 'GROUP BY role_id';
-        $st = $db->prepare($query);
+        $st = static::$db->prepare($query);
         $st->execute(['user_id' => $userId]);
 
         return $st->fetchAll(\PDO::FETCH_COLUMN);
@@ -118,9 +120,8 @@ class Rbac
      */
     public static function getUserRoleIds($userId)
     {
-        $db = Piko::get('db');
         $query = 'SELECT role_id FROM `auth_assignment` WHERE user_id = :user_id';
-        $sth = $db->prepare($query);
+        $sth = static::$db->prepare($query);
         $sth->execute(['user_id' => $userId]);
 
         return $sth->fetchAll(\PDO::FETCH_COLUMN);
@@ -134,14 +135,13 @@ class Rbac
      */
     public static function getUserPermissions($userId)
     {
-        $db = Piko::get('db');
         $query = 'SELECT p.`name` FROM `auth_permission` AS p '
                . 'INNER JOIN `auth_role_has_permission` AS ap ON ap.`permission_id` = p.`id` '
                . 'INNER JOIN `auth_assignment` AS aa ON aa.`role_id` = ap.`role_id` '
                . 'WHERE aa.`user_id` = :user_id '
                . 'GROUP BY permission_id';
 
-        $st = $db->prepare($query);
+        $st = static::$db->prepare($query);
         $st->execute(['user_id' => $userId]);
 
         return $st->fetchAll(\PDO::FETCH_COLUMN);
@@ -153,7 +153,7 @@ class Rbac
      * @param string $roleName The role name
      * @return array An array of permissions as string
      */
-    public static function getRolePermissions($roleName)
+    public static function getRolePermissions($roleName): array
     {
         $roleId = static::getRoleId($roleName);
 
@@ -161,13 +161,11 @@ class Rbac
             throw new \RuntimeException("Role $roleName doesn't exists");
         }
 
-        /* @var $db \piko\Db */
-        $db = Piko::get('db');
         $query = 'SELECT p.`name` FROM `auth_permission` AS p '
             . 'INNER JOIN `auth_role_has_permission` AS ap ON ap.`permission_id` = p.`id` '
             . 'WHERE ap.`role_id` = :role_id '
             . 'GROUP BY permission_id';
-        $st = $db->prepare($query);
+        $st = static::$db->prepare($query);
         $st->execute(['role_id' => $roleId]);
 
         return $st->fetchAll(\PDO::FETCH_COLUMN);
@@ -187,11 +185,8 @@ class Rbac
             throw new \RuntimeException("Role $roleName doesn't exists");
         }
 
-        /* @var $db \piko\Db */
-        $db = Piko::get('db');
-
         $query = 'SELECT permission_id FROM `auth_role_has_permission` WHERE role_id = :role_id';
-        $sth = $db->prepare($query);
+        $sth = static::$db->prepare($query);
         $sth->execute(['role_id' => $roleId]);
 
         return $sth->fetchAll(\PDO::FETCH_COLUMN);
@@ -203,17 +198,16 @@ class Rbac
      * @param string $name The permission name
      * @return int The permission id
      */
-    public static function createPermission($name)
+    public static function createPermission($name): int
     {
-        $db = Piko::get('db');
         $query = 'INSERT INTO `auth_permission` (`name`) VALUES (?)';
 
-        $db->beginTransaction();
-        $st = $db->prepare($query);
+        static::$db->beginTransaction();
+        $st = static::$db->prepare($query);
         $st->execute([$name]);
-        $db->commit();
+        static::$db->commit();
 
-        return (int) $db->lastInsertId();
+        return (int) static::$db->lastInsertId();
     }
 
     /**
@@ -222,10 +216,9 @@ class Rbac
      * @param string $name The permission name
      * @return boolean
      */
-    public static function permissionExists($name)
+    public static function permissionExists($name): bool
     {
-        $db = Piko::get('db');
-        $st = $db->prepare('SELECT COUNT(`id`) FROM `auth_permission` WHERE `name` = :name');
+        $st = static::$db->prepare('SELECT COUNT(`id`) FROM `auth_permission` WHERE `name` = :name');
         $st->execute(['name' => $name]);
 
         return ((int) $st->fetchColumn() > 0) ? true : false;
@@ -237,10 +230,9 @@ class Rbac
      * @param string $name The permission name
      * @return int The permission id (0 if the permission is not found)
      */
-    public static function getPermissionId($name)
+    public static function getPermissionId($name): int
     {
-        $db = Piko::get('db');
-        $st = $db->prepare('SELECT `id` FROM `auth_permission` WHERE `name` = :name');
+        $st = static::$db->prepare('SELECT `id` FROM `auth_permission` WHERE `name` = :name');
         $st->execute(['name' => $name]);
 
         return (int) $st->fetchColumn();
@@ -253,7 +245,7 @@ class Rbac
      * @param string $permissionName The permission name
      * @throws \RuntimeException If the role or the permission doesn't exists
      */
-    public static function assignPermission($roleName, $permissionName)
+    public static function assignPermission($roleName, $permissionName): void
     {
         $roleId = static::getRoleId($roleName);
         $permissionId = static::getPermissionId($permissionName);
@@ -266,12 +258,11 @@ class Rbac
             throw new \RuntimeException("Permission $permissionName doesn't exists");
         }
 
-        $db = Piko::get('db');
         $query = 'INSERT INTO `auth_role_has_permission` (`role_id`, `permission_id`) VALUES (?, ?)';
 
-        $db->beginTransaction();
-        $st = $db->prepare($query);
+        static::$db->beginTransaction();
+        $st = static::$db->prepare($query);
         $st->execute([$roleId, $permissionId]);
-        $db->commit();
+        static::$db->commit();
     }
 }

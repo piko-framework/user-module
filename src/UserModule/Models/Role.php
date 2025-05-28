@@ -6,31 +6,24 @@
  * @license LGPL-3.0; see LICENSE.txt
  * @link https://github.com/piko-framework/piko-user
  */
-namespace piko\user\models;
+namespace Piko\UserModule\Models;
 
-use piko\Piko;
-use piko\user\Rbac;
+use PDO;
+use Piko\DbRecord;
+use function Piko\I18n\__;
+use Piko\UserModule\Rbac;
+use Piko\DbRecord\Attribute\Table;
+use Piko\DbRecord\Attribute\Column;
 
 /**
  * This is the model class for table "auth_role.
  *
- * @property integer $id
- * @property integer $parent_id
- * @property string  $name;
- * @property string  $description;
- *
  * @author Sylvain PHILIP <contact@sphilip.com>
  */
-class Role extends \piko\DbRecord
+#[Table(name:'auth_role')]
+class Role extends DbRecord
 {
     const SCENARIO_ADMIN = 'admin';
-
-    /**
-     * The table name
-     *
-     * @var string
-     */
-    protected $tableName = 'auth_role';
 
     /**
      * The model scenario
@@ -40,50 +33,49 @@ class Role extends \piko\DbRecord
     public $scenario = '';
 
     /**
-     * The model errors
-     *
-     * @var array
-     */
-    public $errors = [];
-
-    /**
      * The role permissions
      *
      * @var array
      */
     public $permissions = [];
 
-    /**
-     * The table schema
-     *
-     * @var array
-     */
-    protected $schema = [
-        'id'          => self::TYPE_INT,
-        'name'        => self::TYPE_STRING,
-        'description' => self::TYPE_STRING,
-    ];
+    #[Column(primaryKey: true)]
+    public ?int $id = null;
+
+    #[Column]
+    public string $name = '';
+
+    #[Column]
+    public string $description = '';
 
     /**
      * {@inheritDoc}
-     * @see \piko\Component::init()
+     * @see \Piko\DbRecord::load()
      */
-    protected function init()
+    public function load($id = 0): DbRecord
     {
+        $record = parent::load($id);
+
         if (!empty($this->name)) {
             $this->permissions = Rbac::getRolePermissionIds($this->name);
         }
+
+        return $record;
     }
 
     /**
      * {@inheritDoc}
-     * @see \piko\Model::bind()
+     * @see \Piko\DbRecord::bind()
      */
-    public function bind($data)
+    public function bind($data): void
     {
         if (isset($data['permissions'])) {
             $this->permissions = $data['permissions'];
             unset($data['permissions']);
+        }
+
+        if (isset($data['id'])) {
+            $data['id'] = (int) $data['id'];
         }
 
         parent::bind($data);
@@ -91,9 +83,9 @@ class Role extends \piko\DbRecord
 
     /**
      * {@inheritDoc}
-     * @see \piko\DbRecord::afterSave()
+     * @see \Piko\DbRecord::afterSave()
      */
-    protected function afterSave()
+    protected function afterSave(): void
     {
         if ($this->scenario === self::SCENARIO_ADMIN) {
 
@@ -129,43 +121,35 @@ class Role extends \piko\DbRecord
 
     /**
      * {@inheritDoc}
-     * @see \piko\Model::validate()
+     * @see \Piko\ModelTrait::validate()
      */
-    public function validate()
+    protected function validate(): void
     {
         if (empty($this->name)) {
-            $this->errors['name'] = Piko::t('user', 'Role name must be filled in.');
-        } else {
+            $this->setError('name', __('user', 'Role name must be filled in.'));
+        } elseif (!$this->id) {
             $st = $this->db->prepare('SELECT COUNT(`id`) FROM `auth_role` WHERE name = :name');
             $st->execute(['name' => $this->name]);
-
             $count = (int) $st->fetchColumn();
 
             if ($count) {
-                $this->errors['name'] = Piko::t('user', 'Role already exists.');
+                $this->setError('name', __('user', 'Role already exists.'));
             }
         }
-
-        if (empty($this->errors)) {
-            return true;
-        }
-
-        return false;
     }
 
     /**
      * Get roles
      *
+     * @param PDO $db a PDO connexion
      * @param string $order The order condition
      * @param number $start The offset start
      * @param number $limit The offset limit
      *
      * @return array An array of role rows
      */
-    public static function find($order = '', $start = 0, $limit = 0)
+    public static function find(PDO $db, $order = '', $start = 0, $limit = 0)
     {
-        /* @var $db \piko\Db */
-        $db = Piko::get('db');
         $query = 'SELECT * FROM `auth_role`';
 
         $query .= ' ORDER BY ' . (empty($order) ? '`id` DESC' : $order);

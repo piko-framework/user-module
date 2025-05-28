@@ -1,0 +1,242 @@
+<?php
+/**
+ * This file is part of the Piko user module
+ *
+ * @copyright 2020 Sylvain PHILIP.
+ * @license LGPL-3.0; see LICENSE.txt
+ * @link https://github.com/piko-framework/piko-user
+ */
+namespace Piko\UserModule\Controllers;
+
+use PDO;
+use Piko\HttpException;
+use function Piko\I18n\__;
+use Piko\User as PikoUser;
+use Piko\UserModule;
+use Piko\UserModule\Models\Role;
+use Piko\UserModule\Models\User;
+use Piko\UserModule\Models\Permission;
+use Piko\Controller\Event\BeforeActionEvent;
+
+/**
+ * User admin controller
+ *
+ * @author Sylvain PHILIP <contact@sphilip.com>
+ */
+class AdminController extends \Piko\Controller
+{
+    protected PikoUser $user;
+    protected PDO $db;
+
+    public function __construct(PikoUser $user, PDO $db)
+    {
+        $this->user = $user;
+        $this->db = $db;
+
+        $this->on(BeforeActionEvent::class, function () {
+            $module = $this->module;
+            assert($module instanceof UserModule);
+
+            if (!$this->user->can($module->adminRole)) {
+                throw new HttpException(403, 'Not authorized.');
+            }
+        });
+    }
+
+    /**
+     * Render users view
+     *
+     * @return string
+     */
+    public function usersAction()
+    {
+        return $this->render('users', [
+            'users' => User::find()
+        ]);
+    }
+
+    /**
+     * Render User form and create or update user
+     *
+     * @return string
+     */
+    public function editAction(int $id = 0)
+    {
+        $user = new User($this->db);
+
+        if ($id) {
+            $user->load($id);
+        }
+
+        $user->scenario = User::SCENARIO_ADMIN;
+        $message = [];
+
+        $post = $this->request->getParsedBody();
+
+        if (!empty($post)) {
+
+            $user->bind($post);
+
+            if ($user->isValid() && $user->save()) {
+                $message['type'] = 'success';
+                $message['content'] = __('user', 'User successfully saved');
+            } else {
+                $message['type'] = 'danger';
+                $message['content'] = __('user', 'Save error!') . implode(' ', $user->errors);
+            }
+        }
+
+        return $this->render('edit', [
+            'user' => $user,
+            'message' => $message,
+            'roles' => Role::find($this->db, '`name` ASC'),
+        ]);
+    }
+
+    /**
+     * Delete users
+     */
+    public function deleteAction()
+    {
+        $post = $this->request->getParsedBody();
+        $ids = isset($post['items'])? $post['items'] : [];
+
+        foreach ($ids as $id) {
+            $user = new User($this->db);
+            $user->load($id);
+            $user->delete();
+        }
+
+        $this->redirect($this->getUrl('user/admin/users'));
+    }
+
+    /**
+     * Render roles view
+     *
+     * @return string
+     */
+    public function rolesAction()
+    {
+        return $this->render('roles', [
+            'roles' => Role::find($this->db),
+            'permissions' => Permission::find($this->db, '`name` ASC'),
+        ]);
+    }
+
+    /**
+     * Create/update role  (AJAX)
+     *
+     * @return string
+     */
+    public function editRoleAction(int $id = 0)
+    {
+        $role = new Role($this->db);
+
+        if ($id) {
+            $role->load($id);
+        }
+
+        $role->scenario = Role::SCENARIO_ADMIN;
+
+        $post = json_decode((string) $this->request->getBody(), true);
+
+        $response = [
+            'role' => $role
+        ];
+
+        if (!empty($post)) {
+
+            $role->bind($post);
+
+            if ($role->isValid() && $role->save()) {
+                $response['status'] = 'success';
+            } else {
+                $response['status'] = 'error';
+                $response['error'] = array_pop($role->getErrors());
+            }
+        }
+
+        return $this->jsonResponse($response);
+    }
+
+
+    /**
+     * Delete roles
+     */
+    public function deleteRolesAction()
+    {
+        $post = $this->request->getParsedBody();
+        $ids = isset($post['items'])? $post['items'] : [];
+
+        foreach ($ids as $id) {
+            $item = new Role($this->db);
+            $item->load($id);
+            $item->delete();
+        }
+
+        $this->redirect($this->getUrl('user/admin/roles'));
+    }
+
+    /**
+     * Render permissions view
+     *
+     * @return string
+     */
+    public function permissionsAction()
+    {
+        return $this->render('permissions', [
+            'permissions' => Permission::find($this->db)
+        ]);
+    }
+
+    /**
+     * Create/update permission (AJAX)
+     *
+     * @return string
+     */
+    public function editPermissionAction(int $id = 0)
+    {
+        $permission = new Permission($this->db);
+
+        if ($id) {
+            $permission->load($id);
+        }
+
+        $response = [
+            'permission' => $permission
+        ];
+
+        $post = json_decode((string) $this->request->getBody(), true);
+
+        if (!empty($post)) {
+
+            $permission->bind($post);
+
+            if ($permission->isValid() && $permission->save()) {
+                $response['status'] = 'success';
+            } else {
+                $response['status'] = 'error';
+                $response['error'] = array_pop($permission->getErrors());
+            }
+        }
+
+        return $this->jsonResponse($response);
+    }
+
+    /**
+     * Delete permissions
+     */
+    public function deletePermissionsAction()
+    {
+        $post = $this->request->getParsedBody();
+        $ids = isset($post['items'])? $post['items'] : [];
+
+        foreach ($ids as $id) {
+            $item = new Permission($this->db);
+            $item->load($id);
+            $item->delete();
+        }
+
+        $this->redirect($this->getUrl('user/admin/permissions'));
+    }
+}

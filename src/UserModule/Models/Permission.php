@@ -2,87 +2,76 @@
 /**
  * This file is part of the Piko user module
  *
- * @copyright 2020 Sylvain PHILIP.
+ * @copyright 2025 Sylvain PHILIP.
  * @license LGPL-3.0; see LICENSE.txt
  * @link https://github.com/piko-framework/piko-user
  */
-namespace piko\user\models;
+namespace Piko\UserModule\Models;
 
-use piko\Piko;
+use PDO;
+use function Piko\I18n\__;
+use Piko\DbRecord\Attribute\Table;
+use Piko\DbRecord\Attribute\Column;
 
 /**
  * This is the model class for table "auth_permission".
  *
- * @property integer $id
- * @property string  $name;
- *
  * @author Sylvain PHILIP <contact@sphilip.com>
  */
-class Permission extends \piko\DbRecord
+#[Table(name:'auth_permission')]
+class Permission extends \Piko\DbRecord
 {
-    /**
-     * The table name
-     *
-     * @var string
-     */
-    protected $tableName = 'auth_permission';
+    #[Column(primaryKey: true)]
+    public ?int $id = null;
 
-    /**
-     * The model errors
-     *
-     * @var array
-     */
-    public $errors = [];
-
-    /**
-     * The table schema
-     *
-     * @var array
-     */
-    protected $schema = [
-        'id'              => self::TYPE_INT,
-        'name'            => self::TYPE_STRING,
-    ];
+    #[Column]
+    public string $name = '';
 
     /**
      * {@inheritDoc}
-     * @see \piko\Model::validate()
+     * @see \Piko\DbRecord::bind()
      */
-    public function validate()
+    public function bind($data): void
+    {
+        if (isset($data['id'])) {
+            $data['id'] = (int) $data['id'];
+        }
+
+        parent::bind($data);
+    }
+
+    /**
+     * {@inheritDoc}
+     * @see \Piko\ModelTrait::validate()
+     */
+    protected function validate(): void
     {
         if (empty($this->name)) {
-            $this->errors['name'] = Piko::t('user', 'Permission name must be filled in.');
-        } else {
+            $this->setError('name', __('user', 'Permission name must be filled in.'));
+        } elseif (!$this->id) {
             $st = $this->db->prepare('SELECT COUNT(`id`) FROM `auth_permission` WHERE name = :name');
             $st->execute(['name' => $this->name]);
 
             $count = (int) $st->fetchColumn();
 
             if ($count) {
-                $this->errors['name'] = Piko::t('user', 'Permission already exists.');
+                $this->setError('name', __('user', 'Permission already exists.'));
             }
         }
-
-        if (empty($this->errors)) {
-            return true;
-        }
-
-        return false;
     }
 
     /**
      * Find permissions
      *
+     * @param PDO $db a PDO connexion
      * @param string $order The order condition
      * @param number $start The offset start
      * @param number $limit The offset limit
      *
      * @return array An array of permission rows
      */
-    public static function find($order = '', $start = 0, $limit = 0)
+    public static function find(PDO $db, $order = '', $start = 0, $limit = 0)
     {
-        /* @var $db \piko\Db */
-        $db = Piko::get('db');
         $query = 'SELECT `id`, `name` FROM `auth_permission`';
         $query .= ' ORDER BY ' . (empty($order) ? '`id` DESC' : $order);
 

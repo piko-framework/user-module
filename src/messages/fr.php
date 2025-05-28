@@ -19,7 +19,7 @@ Une demande de changement de mot passe a été effectuée pour votre compte sur 
 
 Votre identifiant est : {username}.
 
-Pour changer votre mot de passe , cliquez sur le lien ci-dessous.
+Pour changer votre mot de passe , cliquez sur ou copiez-collez dans votre navigateur le lien ci-dessous.
 
 {link}
 

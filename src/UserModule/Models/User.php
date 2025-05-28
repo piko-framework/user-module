@@ -6,51 +6,39 @@
  * @license LGPL-3.0; see LICENSE.txt
  * @link https://github.com/piko-framework/piko-user
  */
-namespace piko\user\models;
+namespace Piko\UserModule\Models;
 
-use piko\Piko;
-use piko\user\Rbac;
+use PDO;
+use DateTime;
+use Piko\Router;
+use Piko\UserModule;
+use RuntimeException;
 use Nette\Mail\Message;
 use Nette\Utils\Random;
+use Piko\UserModule\Rbac;
+use function Piko\I18n\__;
+use Nette\Mail\SmtpMailer;
+use Piko\DbRecord\Attribute\Table;
+use Piko\DbRecord\Attribute\Column;
+use Piko\DbRecord;
+use stdClass;
 
 /**
  * This is the model class for table "user".
  *
- * @property integer $id
- * @property string  $name;
- * @property string  $username;
- * @property string  $email;
- * @property string  $password;
- * @property string  $auth_key;
- * @property integer $confirmed_at;
- * @property integer $blocked_at;
- * @property string  $registration_ip;
- * @property integer $created_at;
- * @property integer $updated_at;
- * @property integer $last_login_at;
- * @property string  $timezone;
- * @property string  $profil;
- *
  * @author Sylvain PHILIP <contact@sphilip.com>
  */
-class User extends \piko\DbRecord implements \piko\IdentityInterface
+
+#[Table(name:'user')]
+class User extends DbRecord implements \Piko\User\IdentityInterface
 {
     const SCENARIO_ADMIN = 'admin';
     const SCENARIO_REGISTER = 'register';
     const SCENARIO_RESET = 'reset';
 
-    /**
-     * The table name
-     * @var string
-     */
-    protected $tableName = 'user';
+    protected static PDO $pdo;
 
-    /**
-     * The model errors
-     *
-     * @var array
-     */
-    public $errors = [];
+    public int $passwordMinLength = 8;
 
     /**
      * The model scenario
@@ -80,42 +68,89 @@ class User extends \piko\DbRecord implements \piko\IdentityInterface
      */
     protected $resetPassword = false;
 
-    /**
-     * The table schema
-     *
-     * @var array
-     */
-    protected $schema = [
-        'id'              => self::TYPE_INT,
-        'name'            => self::TYPE_STRING,
-        'username'        => self::TYPE_STRING,
-        'email'           => self::TYPE_STRING,
-        'password'        => self::TYPE_STRING,
-        'auth_key'        => self::TYPE_STRING,
-        'confirmed_at'    => self::TYPE_INT,
-        'blocked_at'      => self::TYPE_INT,
-        'registration_ip' => self::TYPE_STRING,
-        'created_at'      => self::TYPE_INT,
-        'updated_at'      => self::TYPE_INT,
-        'last_login_at'   => self::TYPE_INT,
-        'is_admin'        => self::TYPE_INT,
-        'timezone'        => self::TYPE_STRING,
-        'profil'          => self::TYPE_STRING,
-    ];
+    #[Column(primaryKey: true)]
+    public ?int $id = null;
+
+    #[Column]
+    public string $name = '';
+
+    #[Column]
+    public string $username = '';
+
+    #[Column]
+    public string $email = '';
+
+    #[Column]
+    public string $password = '';
+
+    #[Column]
+    public string $auth_key = '';
+
+    #[Column]
+    public ?string $confirmed_at = null;
+
+    #[Column]
+    public ?string $blocked_at = null;
+
+    #[Column]
+    public string $registration_ip = '';
+
+    #[Column]
+    public ?string $created_at = null;
+
+    #[Column]
+    public ?string $updated_at = null;
+
+    #[Column]
+    public ?string $last_login_at = null;
+
+    #[Column]
+    public int $is_admin = 0;
+
+    #[Column]
+    public string $timezone = '';
+
+    #[Column]
+    public string|stdClass|null $profil = null;
+
+    public static function setPDO(PDO $pdo)
+    {
+        static::$pdo = $pdo;
+    }
+
+    protected function getCurrentDatetime() : string
+    {
+        $driver = $this->db->getAttribute(PDO::ATTR_DRIVER_NAME);
+
+        return match($driver) {
+            'sqlite' => (string) time(),
+            'mysql' => (new DateTime())->format('Y-m-d H:i:s'),
+            'pgsql' => (new DateTime())->format('Y-m-d H:i:s'),
+            'sqlsrv' => (new DateTime())->format('Y-m-d H:i:s'),
+            default => throw new RuntimeException("Unsupported database driver: $driver"),
+        };
+    }
 
     /**
      * {@inheritDoc}
-     * @see \piko\DbRecord::beforeSave()
+     * @see \Piko\DbRecord::beforeSave()
      */
-    protected function beforeSave($isNew)
+    protected function beforeSave($isNew): bool
     {
         if ($isNew) {
-            $this->name = $this->username;
+            if (empty($this->name)) {
+                $this->name = $this->username;
+            }
+
             $this->password = sha1($this->password);
-            $this->created_at = time();
+            $this->created_at = $this->getCurrentDatetime();
             $this->auth_key = sha1(Random::generate(10));
+
+            if (empty($this->profil)) {
+                $this->profil = '{}';
+            }
         } else {
-            $this->updated_at = time();
+            $this->updated_at = $this->getCurrentDatetime();
 
             if ($this->resetPassword) {
                 $this->password = sha1($this->password);
@@ -127,13 +162,14 @@ class User extends \piko\DbRecord implements \piko\IdentityInterface
 
     /**
      * {@inheritDoc}
-     * @see \piko\DbRecord::afterSave()
+     * @see \Piko\DbRecord::afterSave()
      */
-    protected function afterSave()
+    protected function afterSave(): void
     {
         if ($this->scenario === self::SCENARIO_ADMIN) {
 
             // Don't allow admin user to remove its admin role
+            /*
             if ($this->id == Piko::get('user')->getId()) {
 
                 $adminRole = Piko::get('userModule')->adminRole;
@@ -143,6 +179,7 @@ class User extends \piko\DbRecord implements \piko\IdentityInterface
                     $this->roleIds[] = $adminRoleId;
                 }
             }
+            */
 
             if (!empty($this->roleIds)) {
 
@@ -183,9 +220,9 @@ class User extends \piko\DbRecord implements \piko\IdentityInterface
 
     /**
      * {@inheritDoc}
-     * @see \piko\Model::bind()
+     * @see \Piko\DbRecord::bind()
      */
-    public function bind($data)
+    public function bind($data): void
     {
         if (isset($data['password']) && empty($data['password'])) {
             unset($data['password']);
@@ -214,14 +251,14 @@ class User extends \piko\DbRecord implements \piko\IdentityInterface
 
     /**
      * {@inheritDoc}
-     * @see \piko\Model::validate()
+     * @see \Piko\ModeTrait::validate()
      */
-    public function validate()
+    protected function validate(): void
     {
         if (empty($this->email)) {
-            $this->errors['email'] = Piko::t('user', 'Email must be filled in.');
+            $this->errors['email'] = __('user', 'Email must be filled in.');
         } elseif (!filter_var($this->email, FILTER_VALIDATE_EMAIL)) {
-            $this->errors['email'] = Piko::t(
+            $this->errors['email'] = __(
                 'user',
                 '{email} is not a valid email address.',
                 ['email' => $this->data['email']]
@@ -230,10 +267,7 @@ class User extends \piko\DbRecord implements \piko\IdentityInterface
 
         if (($this->scenario == self::SCENARIO_REGISTER || $this->scenario == self::SCENARIO_ADMIN)
             && empty($this->username)) {
-            $this->errors['username'] = Piko::t('user', 'Username must be filled in.') ;
-        } elseif (($this->scenario == self::SCENARIO_REGISTER || $this->scenario == self::SCENARIO_ADMIN)
-            && !ctype_alnum($this->username)) {
-            $this->errors['username'] = Piko::t('user', 'The username should only contain alphanumeric characters.');
+            $this->errors['username'] = __('user', 'Username must be filled in.') ;
         }
 
         // New user
@@ -245,7 +279,7 @@ class User extends \piko\DbRecord implements \piko\IdentityInterface
             $id = $st->fetchColumn();
 
             if ($id) {
-                $this->errors['email'] = Piko::t('user', 'This email is already used.');
+                $this->errors['email'] = __('user', 'This email is already used.');
             }
 
             $st = $this->db->prepare('SELECT id FROM user WHERE username = ?');
@@ -253,33 +287,27 @@ class User extends \piko\DbRecord implements \piko\IdentityInterface
             $id = $st->fetchColumn();
 
             if ($id) {
-                $this->errors['username'] = Piko::t('user', 'This username is already used.');
+                $this->errors['username'] = __('user', 'This username is already used.');
             }
         }
 
         if (($this->scenario == self::SCENARIO_REGISTER || $this->scenario == self::SCENARIO_RESET)
             && empty($this->password)) {
-            $this->errors['password'] = Piko::t('user', 'Password must be filled in.');
+            $this->errors['password'] = __('user', 'Password must be filled in.');
 
         } elseif (($this->scenario == self::SCENARIO_REGISTER || $this->scenario == self::SCENARIO_RESET) &&
-                strlen($this->password) < piko::get('userModule')->passwordMinLength) {
-            $this->errors['password'] =  Piko::t(
+                strlen($this->password) < $this->passwordMinLength) {
+            $this->errors['password'] =  __(
                 'user',
                 'Password is to short. Minimum {num}: characters.',
-                ['num' => piko::get('userModule')->passwordMinLength]
+                ['num' => (string) $this->passwordMinLength]
             );
         }
 
         if (($this->scenario == self::SCENARIO_REGISTER || $this->scenario == self::SCENARIO_RESET)  &&
             $this->password != $this->password2) {
-                $this->errors['password2'] = Piko::t('user', 'Passwords are not the same.');
+                $this->errors['password2'] = __('user', 'Passwords are not the same.');
         }
-
-        if (empty($this->errors)) {
-            return true;
-        }
-
-        return false;
     }
 
     /**
@@ -293,13 +321,24 @@ class User extends \piko\DbRecord implements \piko\IdentityInterface
     }
 
     /**
+     * Save the login time
+     *
+     * @return boolean
+     */
+    public function saveLoginTime()
+    {
+        $this->last_login_at = $this->getCurrentDatetime();
+        return $this->save();
+    }
+
+    /**
      * Activate an user
      *
      * @return boolean
      */
     public function activate()
     {
-        $this->confirmed_at = time();
+        $this->confirmed_at = $this->getCurrentDatetime();
         return $this->save();
     }
 
@@ -317,31 +356,25 @@ class User extends \piko\DbRecord implements \piko\IdentityInterface
      *
      * @return boolean Return false if fail to send email
      */
-    public function sendRegistrationConfirmation()
+    public function sendRegistrationConfirmation(Router $router, SmtpMailer $mailer)
     {
-        /* @var $router \Piko\Router */
-        $router = Piko::get('router');
-
         $siteName = getenv('SITE_NAME');
         $baseUrl = $this->getAbsoluteBaseUrl();
 
-        $message = Piko::t('user', 'confirmation_mail_body', [
+        $message = __('user', 'confirmation_mail_body', [
             'site_name' => $siteName,
             'link' => $baseUrl . $router->getUrl('user/default/confirmation', ['token' => $this->auth_key]),
             'base_url' => $baseUrl,
             'username' => $this->username,
         ]);
 
-        $subject = Piko::t('user', 'Registration confirmation on {site_name}', ['site_name' => $siteName]);
+        $subject = __('user', 'Registration confirmation on {site_name}', ['site_name' => $siteName]);
 
         $mail = new Message();
         $mail->setFrom($siteName . ' <' . getenv('NO_REPLY_EMAIL') . '>')
              ->addTo($this->email)
              ->setSubject($subject)
              ->setBody($message);
-
-        /* @var $mailer \Nette\Mail\SmtpMailer */
-        $mailer = Piko::get('mailer');
 
         try {
             $mailer->send($mail);
@@ -359,30 +392,25 @@ class User extends \piko\DbRecord implements \piko\IdentityInterface
      *
      * @return boolean Return false if fail to send email
      */
-    public function sendResetPassword()
+    public function sendResetPassword(Router $router, SmtpMailer $mailer)
     {
-        /* @var $router \Piko\Router */
-        $router = Piko::get('router');
         $siteName = getenv('SITE_NAME');
 
         $baseUrl = $this->getAbsoluteBaseUrl();
 
-        $message = Piko::t('user', 'reset_password_mail_body', [
+        $message = __('user', 'reset_password_mail_body', [
             'site_name' => $siteName,
             'link' => $baseUrl . $router->getUrl('user/default/reset-password', ['token' => $this->auth_key]),
             'username' => $this->username,
         ]);
 
-        $subject = Piko::t('user', 'Password change request on {site_name}', ['site_name' => $siteName]);
+        $subject = __('user', 'Password change request on {site_name}', ['site_name' => $siteName]);
 
         $mail = new Message();
-        $mail->setFrom($siteName . ' <' . getenv('NO_REPLY_EMAIL') . '>')
+        $mail->setFrom(getenv('NO_REPLY_EMAIL'), $siteName)
              ->addTo($this->email)
              ->setSubject($subject)
              ->setBody($message);
-
-        /* @var $mailer \Nette\Mail\SmtpMailer */
-        $mailer = Piko::get('mailer');
 
         try {
             $mailer->send($mail);
@@ -407,8 +435,6 @@ class User extends \piko\DbRecord implements \piko\IdentityInterface
      */
     public static function find($filters = [], $order = '', $start = 0, $limit = 0)
     {
-        /* @var $db \piko\Db */
-        $db = Piko::get('db');
         $query = 'SELECT * FROM `user`';
         $where = [];
 
@@ -430,7 +456,7 @@ class User extends \piko\DbRecord implements \piko\IdentityInterface
             $query .= ' LIMIT ' . (int) $limit;
         }
 
-        $sth = $db->prepare($query);
+        $sth = static::$pdo->prepare($query);
 
         $sth->execute($filters);
 
@@ -446,16 +472,14 @@ class User extends \piko\DbRecord implements \piko\IdentityInterface
      */
     public static function findByUsername($username)
     {
-        $db = \piko\Piko::get('db');
-
-        $st = $db->prepare('SELECT id FROM user WHERE username = ?');
+        $st = static::$pdo->prepare('SELECT id FROM user WHERE username = ?');
         $st->bindParam(1, $username, \PDO::PARAM_STR);
 
         if ($st->execute()) {
             $id = $st->fetchColumn();
 
             if ($id) {
-                $user = new static();
+                $user = new static(static::$pdo);
                 $user->load($id);
 
                 return $user;
@@ -473,19 +497,17 @@ class User extends \piko\DbRecord implements \piko\IdentityInterface
      */
     public static function findByEmail($email)
     {
-        $db = \piko\Piko::get('db');
 
-        $st = $db->prepare('SELECT id FROM user WHERE email = ?');
+        $st = static::$pdo->prepare('SELECT id FROM user WHERE email = ?');
         $st->bindParam(1, $email, \PDO::PARAM_STR);
 
         if ($st->execute()) {
             $id = $st->fetchColumn();
 
             if ($id) {
-                $user = new static();
-                $user->load($id);
+                $user = new static(static::$pdo);
 
-                return $user;
+                return $user->load($id);
             }
         }
 
@@ -500,15 +522,13 @@ class User extends \piko\DbRecord implements \piko\IdentityInterface
      */
     public static function findByAuthKey($token)
     {
-        $db = \piko\Piko::get('db');
-
-        $st = $db->prepare('SELECT id FROM `user` WHERE `auth_key` = ?');
+        $st = static::$pdo->prepare('SELECT id FROM `user` WHERE `auth_key` = ?');
 
         if ($st->execute([$token])) {
             $id = $st->fetchColumn();
 
             if ($id) {
-                $user = new static();
+                $user = new static(static::$pdo);
                 $user->load($id);
 
                 return $user;
@@ -538,8 +558,9 @@ class User extends \piko\DbRecord implements \piko\IdentityInterface
     public static function findIdentity($id)
     {
         try {
-            $user = new static($id);
-            return $user;
+            $user = new static(static::$pdo);
+
+            return $user->load($id);
         } catch (\RuntimeException $e) {
 
         }
