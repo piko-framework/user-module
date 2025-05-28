@@ -1,50 +1,76 @@
 <?php
+
 /**
  * This file is part of the Piko user module
  *
- * @copyright 2020 Sylvain PHILIP.
+ * @package Piko\UserModule
+ * @copyright 2025 Sylvain PHILIP.
  * @license LGPL-3.0; see LICENSE.txt
- * @link https://github.com/piko-framework/piko-user
+ * @link https://github.com/piko-framework/user-module
  */
+
 namespace Piko\UserModule\Models;
 
 use PDO;
 use Piko\DbRecord;
-use function Piko\I18n\__;
 use Piko\UserModule\Rbac;
 use Piko\DbRecord\Attribute\Table;
 use Piko\DbRecord\Attribute\Column;
 
+use function Piko\I18n\__;
+
 /**
- * This is the model class for table "auth_role.
+ * Role class
+ *
+ * This class represents a role in the user management system.
  *
  * @author Sylvain PHILIP <contact@sphilip.com>
  */
 #[Table(name:'auth_role')]
 class Role extends DbRecord
 {
-    const SCENARIO_ADMIN = 'admin';
+    /**
+     * Admin scenario
+     *
+     * @var string
+     */
+    public const SCENARIO_ADMIN = 'admin';
 
     /**
-     * The model scenario
+     * Curent model scenario
      *
      * @var string
      */
     public $scenario = '';
 
     /**
-     * The role permissions
+     * Role permissions
      *
      * @var array
      */
     public $permissions = [];
 
+    /**
+     * Role primary key id
+     *
+     * @var integer|null
+     */
     #[Column(primaryKey: true)]
     public ?int $id = null;
 
+    /**
+     * Role name
+     *
+     * @var string
+     */
     #[Column]
     public string $name = '';
 
+    /**
+     * Role description
+     *
+     * @var string
+     */
     #[Column]
     public string $description = '';
 

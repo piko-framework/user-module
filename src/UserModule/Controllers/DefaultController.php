@@ -1,29 +1,46 @@
 <?php
+
 /**
  * This file is part of the Piko user module
  *
- * @copyright 2020 Sylvain PHILIP.
- * @license LGPL-3.0; see LICENSE.txt
- * @link https://github.com/piko-framework/piko-user
+ * @package   Piko\UserModule
+ * @copyright 2025 Sylvain PHILIP.
+ * @license   LGPL-3.0; see LICENSE.txt
+ * @link      https://github.com/piko-framework/user-module
  */
+
 namespace Piko\UserModule\Controllers;
 
 use PDO;
 use Piko\UserModule;
 use piko\HttpException;
-use function Piko\I18n\__;
 use Piko\User as PikoUser;
 use Piko\UserModule\Models\User;
 
+use function Piko\I18n\__;
+
 /**
- * User default controller
+ * DefaultController Class
+ *
+ * Default user controller
  *
  * @author Sylvain PHILIP <contact@sphilip.com>
  */
 class DefaultController extends \Piko\Controller
 {
+    /**
+     * Current user
+     *
+     * @var PikoUser
+     */
     protected PikoUser $user;
-    protected \PDO $db;
+
+    /**
+     * Application PDO connexion
+     *
+     * @var PDO
+     */
+    protected PDO $db;
 
     public function __construct(PikoUser $user, PDO $db)
     {
@@ -48,7 +65,7 @@ class DefaultController extends \Piko\Controller
         if (!empty($post)) {
 
             $module = $this->module;
-            assert ($module instanceof UserModule);
+            assert($module instanceof UserModule);
 
             $user = new User($this->db);
             $user->scenario = User::SCENARIO_REGISTER;
@@ -88,7 +105,7 @@ class DefaultController extends \Piko\Controller
         if (!empty($post)) {
 
             $module = $this->module;
-            assert ($module instanceof UserModule);
+            assert($module instanceof UserModule);
 
             $user = new User($this->db);
             $user->scenario = 'register';
@@ -147,7 +164,7 @@ class DefaultController extends \Piko\Controller
         $message = false;
         $post = $this->request->getParsedBody();
 
-        $reminder = $post['reminder']?? '';
+        $reminder = $post['reminder'] ?? '';
 
         if (!empty($reminder)) {
 

@@ -1,115 +1,221 @@
 <?php
+
 /**
  * This file is part of the Piko user module
  *
- * @copyright 2020 Sylvain PHILIP.
- * @license LGPL-3.0; see LICENSE.txt
- * @link https://github.com/piko-framework/piko-user
+ * @package   Piko\UserModule
+ * @copyright 2025 Sylvain PHILIP.
+ * @license   LGPL-3.0; see LICENSE.txt
+ * @link      https://github.com/piko-framework/user-module
  */
+
 namespace Piko\UserModule\Models;
 
 use PDO;
 use DateTime;
+use stdClass;
 use Piko\Router;
-use Piko\UserModule;
+use Piko\DbRecord;
 use RuntimeException;
 use Nette\Mail\Message;
 use Nette\Utils\Random;
 use Piko\UserModule\Rbac;
-use function Piko\I18n\__;
 use Nette\Mail\SmtpMailer;
 use Piko\DbRecord\Attribute\Table;
 use Piko\DbRecord\Attribute\Column;
-use Piko\DbRecord;
-use stdClass;
+
+use function Piko\I18n\__;
 
 /**
+ * User Class
+ *
  * This is the model class for table "user".
  *
  * @author Sylvain PHILIP <contact@sphilip.com>
  */
-
 #[Table(name:'user')]
 class User extends DbRecord implements \Piko\User\IdentityInterface
 {
-    const SCENARIO_ADMIN = 'admin';
-    const SCENARIO_REGISTER = 'register';
-    const SCENARIO_RESET = 'reset';
+    /**
+     * Administration scenario
+     *
+     * @var string
+     */
+    public const SCENARIO_ADMIN = 'admin';
 
+    /**
+     * Registration scenario
+     *
+     * @var string
+     */
+    public const SCENARIO_REGISTER = 'register';
+
+    /**
+     * Reset scenario
+     *
+     * @var string
+     */
+    public const SCENARIO_RESET = 'reset';
+
+    /**
+     * Shared PDO instance
+     *
+     * @var PDO
+     */
     protected static PDO $pdo;
 
+    /**
+     * Minimum password length (register/reset scenario)
+     *
+     * @var integer
+     */
     public int $passwordMinLength = 8;
 
     /**
-     * The model scenario
+     * Current model scenario
      *
      * @var string
      */
     public $scenario = '';
 
     /**
-     * The user role ids
+     * User role IDs
      *
      * @var array
      */
     protected $roleIds = [];
 
     /**
-     * The confirmation password
+     * Password confirmation
      *
      * @var string
      */
     protected $password2 = '';
 
     /**
-     * Reset password state
+     * Indicates if the password should be reset
      *
      * @var boolean
      */
     protected $resetPassword = false;
 
+    /**
+     * User ID
+     *
+     * @var integer|null
+     */
     #[Column(primaryKey: true)]
     public ?int $id = null;
 
+    /**
+     * User full name
+     *
+     * @var string
+     */
     #[Column]
     public string $name = '';
 
+    /**
+     * Username
+     *
+     * @var string
+     */
     #[Column]
     public string $username = '';
 
+    /**
+     * Email address
+     *
+     * @var string
+     */
     #[Column]
     public string $email = '';
 
+    /**
+     * Hashed password
+     *
+     * @var string
+     */
     #[Column]
     public string $password = '';
 
+    /**
+     * Authentication key
+     *
+     * @var string
+     */
     #[Column]
     public string $auth_key = '';
 
+    /**
+     * Confirmation date
+     *
+     * @var string|null
+     */
     #[Column]
     public ?string $confirmed_at = null;
 
+    /**
+     * Block date
+     *
+     * @var string|null
+     */
     #[Column]
     public ?string $blocked_at = null;
 
+    /**
+     * Registration IP address
+     *
+     * @var string
+     */
     #[Column]
     public string $registration_ip = '';
 
+    /**
+     * Creation date
+     *
+     * @var string|null
+     */
     #[Column]
     public ?string $created_at = null;
 
+    /**
+     * Update date
+     *
+     * @var string|null
+     */
     #[Column]
     public ?string $updated_at = null;
 
+    /**
+     * Last login date
+     *
+     * @var string|null
+     */
     #[Column]
     public ?string $last_login_at = null;
 
+    /**
+     * Indicates if the user is an administrator
+     *
+     * @var integer
+     */
     #[Column]
     public int $is_admin = 0;
 
+    /**
+     * Timezone
+     *
+     * @var string
+     */
     #[Column]
     public string $timezone = '';
 
+    /**
+     * User profile (JSON or object)
+     *
+     * @var string|stdClass|null
+     */
     #[Column]
     public string|stdClass|null $profil = null;
 
@@ -118,11 +224,11 @@ class User extends DbRecord implements \Piko\User\IdentityInterface
         static::$pdo = $pdo;
     }
 
-    protected function getCurrentDatetime() : string
+    protected function getCurrentDatetime(): string
     {
         $driver = $this->db->getAttribute(PDO::ATTR_DRIVER_NAME);
 
-        return match($driver) {
+        return match ($driver) {
             'sqlite' => (string) time(),
             'mysql' => (new DateTime())->format('Y-m-d H:i:s'),
             'pgsql' => (new DateTime())->format('Y-m-d H:i:s'),
@@ -265,14 +371,18 @@ class User extends DbRecord implements \Piko\User\IdentityInterface
             );
         }
 
-        if (($this->scenario == self::SCENARIO_REGISTER || $this->scenario == self::SCENARIO_ADMIN)
-            && empty($this->username)) {
+        if (
+            ($this->scenario == self::SCENARIO_REGISTER || $this->scenario == self::SCENARIO_ADMIN)
+            && empty($this->username)
+        ) {
             $this->errors['username'] = __('user', 'Username must be filled in.') ;
         }
 
         // New user
-        if (($this->scenario == self::SCENARIO_REGISTER || $this->scenario == self::SCENARIO_ADMIN)
-            && empty($this->id)) {
+        if (
+            ($this->scenario == self::SCENARIO_REGISTER || $this->scenario == self::SCENARIO_ADMIN)
+            && empty($this->id)
+        ) {
 
             $st = $this->db->prepare('SELECT id FROM user WHERE email = ?');
             $st->execute([$this->email]);
@@ -291,12 +401,16 @@ class User extends DbRecord implements \Piko\User\IdentityInterface
             }
         }
 
-        if (($this->scenario == self::SCENARIO_REGISTER || $this->scenario == self::SCENARIO_RESET)
-            && empty($this->password)) {
+        if (
+            ($this->scenario == self::SCENARIO_REGISTER || $this->scenario == self::SCENARIO_RESET)
+            && empty($this->password)
+        ) {
             $this->errors['password'] = __('user', 'Password must be filled in.');
 
-        } elseif (($this->scenario == self::SCENARIO_REGISTER || $this->scenario == self::SCENARIO_RESET) &&
-                strlen($this->password) < $this->passwordMinLength) {
+        } elseif (
+            ($this->scenario == self::SCENARIO_REGISTER || $this->scenario == self::SCENARIO_RESET) &&
+                strlen($this->password) < $this->passwordMinLength
+        ) {
             $this->errors['password'] =  __(
                 'user',
                 'Password is to short. Minimum {num}: characters.',
@@ -304,8 +418,10 @@ class User extends DbRecord implements \Piko\User\IdentityInterface
             );
         }
 
-        if (($this->scenario == self::SCENARIO_REGISTER || $this->scenario == self::SCENARIO_RESET)  &&
-            $this->password != $this->password2) {
+        if (
+            ($this->scenario == self::SCENARIO_REGISTER || $this->scenario == self::SCENARIO_RESET)  &&
+            $this->password != $this->password2
+        ) {
                 $this->errors['password2'] = __('user', 'Passwords are not the same.');
         }
     }

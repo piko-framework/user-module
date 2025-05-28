@@ -1,8 +1,10 @@
 <?php
+
 /**
  * This file is part of the Piko user module
  *
- * @copyright 2024 Sylvain PHILIP.
+ * @package Piko\UserModule
+ * @copyright 2025 Sylvain PHILIP.
  * @license LGPL-3.0; see LICENSE.txt
  * @link https://github.com/piko-framework/user-module
  *
@@ -13,28 +15,33 @@
  * /user/default/edit : User account form
  * /user/admin/users : Manage users, roles, permissions
  */
+
 namespace Piko;
 
 use PDO;
 use Piko\UserModule\Models\User;
 use Piko\UserModule\AccessChecker;
 use Piko\UserModule\Rbac;
-
 use Piko\I18n;
-
 use RuntimeException;
 
 /**
- * User module class
+ * User Module class
  *
  * @author Sylvain PHILIP <contact@sphilip.com>
  */
 class UserModule extends Module
 {
+    /**
+     * Controller namespace
+     *
+     * @var string
+     */
     public $controllerNamespace = 'Piko\\UserModule\\Controllers';
 
     /**
-     * The admin role
+     * Admin role name
+     *
      * @var string
      */
     public $adminRole = 'admin';
@@ -47,13 +54,11 @@ class UserModule extends Module
     public $allowUserRegistration = false;
 
     /**
-     * Min length of the user password
+     * Minimum length of the user password
      *
      * @var integer
      */
     public $passwordMinLength = 8;
-
-    private static PDO $db;
 
     public function bootstrap()
     {
@@ -104,5 +109,4 @@ class UserModule extends Module
 
         Rbac::assignRole($user->id, 'admin');
     }
-
 }

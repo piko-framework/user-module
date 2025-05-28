@@ -1,5 +1,15 @@
 <?php
-namespace Piko\Usermodule;
+
+/**
+ * This file is part of the Piko user module
+ *
+ * @package Piko\UserModule
+ * @copyright 2025 Sylvain PHILIP.
+ * @license LGPL-3.0; see LICENSE.txt
+ * @link https://github.com/piko-framework/user-module
+ */
+
+namespace Piko\UserModule;
 
 use PDO;
 use Piko\ModularApplication;
@@ -8,10 +18,19 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\RequestHandlerInterface;
-use Piko\UserModule\Models\User;
 
+/**
+ * AuthMiddleware class
+ *
+ * Middleware for user authentication management
+ *
+ * @author Sylvain PHILIP <contact@sphilip.com>
+ */
 final class AuthMiddleware implements MiddlewareInterface
 {
+    /**
+     * @var ModularApplication
+     */
     private ModularApplication $application;
 
     public function __construct(ModularApplication $app)
@@ -20,7 +39,6 @@ final class AuthMiddleware implements MiddlewareInterface
 
         $pdo = $this->application->getComponent('PDO');
         assert($pdo instanceof PDO);
-        // User::setPDO($pdo);
     }
 
     /**
@@ -49,7 +67,7 @@ final class AuthMiddleware implements MiddlewareInterface
 
         if ($user->isGuest() && !in_array($path, $allowedUrls)) {
 
-            $response= new Response();
+            $response = new Response();
 
             return $response->withHeader('Location', $loginUrl);
         }

@@ -1,29 +1,45 @@
 <?php
+
 /**
  * This file is part of the Piko user module
  *
+ * @package Piko\UserModule
  * @copyright 2025 Sylvain PHILIP.
  * @license LGPL-3.0; see LICENSE.txt
- * @link https://github.com/piko-framework/piko-user
+ * @link https://github.com/piko-framework/user-module
  */
+
 namespace Piko\UserModule\Models;
 
 use PDO;
-use function Piko\I18n\__;
 use Piko\DbRecord\Attribute\Table;
 use Piko\DbRecord\Attribute\Column;
 
+use function Piko\I18n\__;
+
 /**
- * This is the model class for table "auth_permission".
+ * Permission class
+ *
+ * Model representing a user permission
  *
  * @author Sylvain PHILIP <contact@sphilip.com>
  */
 #[Table(name:'auth_permission')]
 class Permission extends \Piko\DbRecord
 {
+    /**
+     * Permission primary key id
+     *
+     * @var integer|null
+     */
     #[Column(primaryKey: true)]
     public ?int $id = null;
 
+    /**
+     * Permission name
+     *
+     * @var string
+     */
     #[Column]
     public string $name = '';
 

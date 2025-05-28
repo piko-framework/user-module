@@ -1,22 +1,32 @@
 <?php
+
 /**
  * This file is part of the Piko user module
  *
- * @copyright 2020 Sylvain PHILIP.
+ * @package Piko\UserModule
+ * @copyright 2025 Sylvain PHILIP.
  * @license LGPL-3.0; see LICENSE.txt
- * @link https://github.com/piko-framework/piko-user
+ * @link https://github.com/piko-framework/user-module
  */
-namespace Piko\Usermodule;
+
+namespace Piko\UserModule;
 
 use Piko\UserModule\Models\User;
 
 /**
- * Access checker class
+ * AccessChecker class
  *
- * @author Sylvain PHILIP <contact@sphilip.com>
+ * Checks a user's access rights
+ *
+ * @author Sylvain PHILIP <sylvain.philip@piko-framework.org>
  */
 class AccessChecker
 {
+    /**
+     * Admin role name
+     *
+     * @var string
+     */
     private static $adminRole;
 
     /**
@@ -47,7 +57,7 @@ class AccessChecker
      *
      * @see \piko\User
      */
-    public static function checkAccess($userId, string $permission) : bool
+    public static function checkAccess($userId, string $permission): bool
     {
         $identity = User::findIdentity($userId);
 

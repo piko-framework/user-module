@@ -1,22 +1,33 @@
 <?php
+
 /**
  * This file is part of the Piko user module
  *
- * @copyright 2020 Sylvain PHILIP.
+ * @package Piko\UserModule
+ * @copyright 2025 Sylvain PHILIP.
  * @license LGPL-3.0; see LICENSE.txt
- * @link https://github.com/piko-framework/piko-user
+ * @link https://github.com/piko-framework/user-module
+ *
  */
+
 namespace Piko\UserModule;
 
 use PDO;
 
 /**
- * Rbac utility class
+ * Rbac class
+ *
+ * Utility to manage roles and permissions (RBAC)
  *
  * @author Sylvain PHILIP <contact@sphilip.com>
  */
 class Rbac
 {
+    /**
+     * Connexion PDO partagée
+     *
+     * @var PDO
+     */
     protected static PDO $db;
 
     public static function setPDO(PDO $db)

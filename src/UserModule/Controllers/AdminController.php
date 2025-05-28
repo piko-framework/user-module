@@ -1,31 +1,48 @@
 <?php
+
 /**
  * This file is part of the Piko user module
  *
- * @copyright 2020 Sylvain PHILIP.
+ * @package Piko\UserModule
+ * @copyright 2025 Sylvain PHILIP.
  * @license LGPL-3.0; see LICENSE.txt
- * @link https://github.com/piko-framework/piko-user
+ * @link https://github.com/piko-framework/user-module
  */
+
 namespace Piko\UserModule\Controllers;
 
 use PDO;
-use Piko\HttpException;
-use function Piko\I18n\__;
-use Piko\User as PikoUser;
 use Piko\UserModule;
+use Piko\HttpException;
+use Piko\User as PikoUser;
 use Piko\UserModule\Models\Role;
 use Piko\UserModule\Models\User;
 use Piko\UserModule\Models\Permission;
 use Piko\Controller\Event\BeforeActionEvent;
 
+use function Piko\I18n\__;
+
 /**
- * User admin controller
+ * AdminController Class
+ *
+ * User administration controller
  *
  * @author Sylvain PHILIP <contact@sphilip.com>
  */
 class AdminController extends \Piko\Controller
 {
+    /**
+     * Current user
+     *
+     * @var PikoUser
+     */
     protected PikoUser $user;
+
+    /**
+     * Application PDO connexion
+     *
+     * @var PDO
+     */
     protected PDO $db;
 
     public function __construct(PikoUser $user, PDO $db)
@@ -99,7 +116,7 @@ class AdminController extends \Piko\Controller
     public function deleteAction()
     {
         $post = $this->request->getParsedBody();
-        $ids = isset($post['items'])? $post['items'] : [];
+        $ids = isset($post['items']) ? $post['items'] : [];
 
         foreach ($ids as $id) {
             $user = new User($this->db);
@@ -166,7 +183,7 @@ class AdminController extends \Piko\Controller
     public function deleteRolesAction()
     {
         $post = $this->request->getParsedBody();
-        $ids = isset($post['items'])? $post['items'] : [];
+        $ids = isset($post['items']) ? $post['items'] : [];
 
         foreach ($ids as $id) {
             $item = new Role($this->db);
@@ -229,7 +246,7 @@ class AdminController extends \Piko\Controller
     public function deletePermissionsAction()
     {
         $post = $this->request->getParsedBody();
-        $ids = isset($post['items'])? $post['items'] : [];
+        $ids = isset($post['items']) ? $post['items'] : [];
 
         foreach ($ids as $id) {
             $item = new Permission($this->db);
