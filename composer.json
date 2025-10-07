@@ -13,8 +13,7 @@
 		"piko/framework" : "^3.4",
 		"piko/i18n": "^2.1",
 		"piko/user": "^2.0",
-		"nette/mail" : "^4.0",
-		"byjg/migration": "^5.0"
+		"nette/mail" : "^4.0"
 	},
 	"require-dev" : {
 		"phpunit/phpunit" : "^10.5",
