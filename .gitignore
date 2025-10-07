@@ -1,7 +1,3 @@
-/.buildpath
-/.buildconfig
-/.project
-/.settings
-/vendor/
-/composer.lock
-.aider*
+vendor
+composer.lock
+.phpactor.json
