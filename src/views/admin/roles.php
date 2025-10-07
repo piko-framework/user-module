@@ -1,10 +1,10 @@
 <?php
-use Piko;
 use function Piko\I18n\__;
-assert($this instanceof Piko\View);
-
-/* @var $roles array */
-/* @var $permissions array */
+/**
+ * @var \Piko\View $this
+ * @var array $roles
+ * @var array $permissions
+ */
 
 $this->title = __('user', 'Roles');
 $confirmDeleteMsg = __('user', 'Are you sure you want to perform this action?');
@@ -151,4 +151,3 @@ $this->registerJs($script);
     </div>
   </div>
 </div>
-

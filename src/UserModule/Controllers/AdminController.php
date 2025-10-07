@@ -12,6 +12,7 @@
 namespace Piko\UserModule\Controllers;
 
 use PDO;
+use Psr\Http\Message\ResponseInterface;
 use Piko\UserModule;
 use Piko\HttpException;
 use Piko\User as PikoUser;
@@ -31,30 +32,12 @@ use function Piko\I18n\__;
  */
 class AdminController extends \Piko\Controller
 {
-    /**
-     * Current user
-     *
-     * @var PikoUser
-     */
-    protected PikoUser $user;
-
-    /**
-     * Application PDO connexion
-     *
-     * @var PDO
-     */
-    protected PDO $db;
-
-    public function __construct(PikoUser $user, PDO $db)
+    public function __construct(protected PikoUser $user, protected PDO $db)
     {
-        $this->user = $user;
-        $this->db = $db;
-
         $this->on(BeforeActionEvent::class, function () {
-            $module = $this->module;
-            assert($module instanceof UserModule);
+            assert($this->module instanceof UserModule);
 
-            if (!$this->user->can($module->adminRole)) {
+            if (!$this->user->can($this->module->adminRole)) {
                 throw new HttpException(403, 'Not authorized.');
             }
         });
@@ -113,7 +96,7 @@ class AdminController extends \Piko\Controller
     /**
      * Delete users
      */
-    public function deleteAction()
+    public function deleteAction(): void
     {
         $post = $this->request->getParsedBody();
         $ids = isset($post['items']) ? $post['items'] : [];
@@ -143,9 +126,9 @@ class AdminController extends \Piko\Controller
     /**
      * Create/update role  (AJAX)
      *
-     * @return string
+     * @return ResponseInterface
      */
-    public function editRoleAction(int $id = 0)
+    public function editRoleAction(int $id = 0): ResponseInterface
     {
         $role = new Role($this->db);
 
@@ -180,7 +163,7 @@ class AdminController extends \Piko\Controller
     /**
      * Delete roles
      */
-    public function deleteRolesAction()
+    public function deleteRolesAction(): void
     {
         $post = $this->request->getParsedBody();
         $ids = isset($post['items']) ? $post['items'] : [];
@@ -209,9 +192,9 @@ class AdminController extends \Piko\Controller
     /**
      * Create/update permission (AJAX)
      *
-     * @return string
+     * @return ResponseInterface
      */
-    public function editPermissionAction(int $id = 0)
+    public function editPermissionAction(int $id = 0): ResponseInterface
     {
         $permission = new Permission($this->db);
 
@@ -243,7 +226,7 @@ class AdminController extends \Piko\Controller
     /**
      * Delete permissions
      */
-    public function deletePermissionsAction()
+    public function deletePermissionsAction(): void
     {
         $post = $this->request->getParsedBody();
         $ids = isset($post['items']) ? $post['items'] : [];

@@ -43,7 +43,7 @@ class AccessChecker
      */
     private static $permissions = null;
 
-    public static function setAdminRole(string $role)
+    public static function setAdminRole(string $role): void
     {
         static::$adminRole = $role;
     }

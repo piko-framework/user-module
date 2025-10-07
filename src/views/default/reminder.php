@@ -1,10 +1,11 @@
 <?php
 use function Piko\I18n\__;
 
-assert($this instanceof Piko\View);
-
-/* @var $message array */
-/* @var $reminder string */
+/**
+ * @var \Piko\View $this
+ * @var array $message
+ * @var string $reminder
+ */
 
 $this->title = __('user', 'Forget password');
 
@@ -50,7 +51,3 @@ $this->registerCSS($css);
 </form>
 
 </main>
-
-
-
-

@@ -30,7 +30,7 @@ class Rbac
      */
     protected static PDO $db;
 
-    public static function setPDO(PDO $db)
+    public static function setPDO(PDO $db): void
     {
         static::$db = $db;
     }
@@ -42,7 +42,7 @@ class Rbac
      * @param string $description The role description
      * @return int The role Id
      */
-    public static function createRole($name, $description = '')
+    public static function createRole($name, $description = ''): int
     {
         $query = 'INSERT INTO `auth_role` (`name`, `description`) VALUES (?, ?)';
 
@@ -58,9 +58,9 @@ class Rbac
      * Check if the role exists
      *
      * @param string $name The role name
-     * @return boolean
+     * @return bool
      */
-    public static function roleExists($name)
+    public static function roleExists($name): bool
     {
         $st = static::$db->prepare('SELECT COUNT(`id`) FROM `auth_role` WHERE `name` = :name');
         $st->execute(['name' => $name]);
@@ -89,7 +89,7 @@ class Rbac
      * @param string $roleName The role name
      * @throws \RuntimeException If the role doesn't exists
      */
-    public static function assignRole($userId, $roleName)
+    public static function assignRole($userId, $roleName): void
     {
         $roleId = static::getRoleId($roleName);
 
@@ -111,7 +111,7 @@ class Rbac
      * @param int $userId The user Id
      * @return array An array containing user roles
      */
-    public static function getUserRoles($userId)
+    public static function getUserRoles($userId): array
     {
         $query = 'SELECT `auth_role`.`name` FROM `auth_role` '
                . 'INNER JOIN `auth_assignment` ON `auth_assignment`.`role_id` = `auth_role`.`id` '
@@ -129,7 +129,7 @@ class Rbac
      * @param int $userId The user Id
      * @return array An array containing user role ids
      */
-    public static function getUserRoleIds($userId)
+    public static function getUserRoleIds($userId): array
     {
         $query = 'SELECT role_id FROM `auth_assignment` WHERE user_id = :user_id';
         $sth = static::$db->prepare($query);
@@ -144,7 +144,7 @@ class Rbac
      * @param int $userId The user Id
      * @return array An array containing user permissions
      */
-    public static function getUserPermissions($userId)
+    public static function getUserPermissions($userId): array
     {
         $query = 'SELECT p.`name` FROM `auth_permission` AS p '
                . 'INNER JOIN `auth_role_has_permission` AS ap ON ap.`permission_id` = p.`id` '
@@ -188,7 +188,7 @@ class Rbac
      * @param string $roleName The role name
      * @return array An array of permission ids
      */
-    public static function getRolePermissionIds($roleName)
+    public static function getRolePermissionIds($roleName): array
     {
         $roleId = static::getRoleId($roleName);
 

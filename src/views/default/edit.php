@@ -1,11 +1,11 @@
 <?php
 use function Piko\I18n\__;
 
-assert($this instanceof Piko\View);
-
 /**
- * @var array $message
+ * @var \Piko\View $this
  * @var \Piko\UserModule\Models\User $user
+ * @var array $message
+ *
  */
 
 $this->title = __('user', 'Edit your account');
@@ -90,4 +90,3 @@ if (!empty($user->profil)) {
   <button type="submit" class="btn btn-primary"><?= __('user', 'Save') ?></button>
   <a href="<?= Piko::getAlias('@web/')?>" class="btn btn-default"><?= __('user', 'Cancel') ?></a>
 </form>
-

@@ -1,11 +1,12 @@
 <?php
-use function Piko\I18n\__;
+/**
+ * @var \Piko\View $this
+ * @var \Piko\UserModule\Models\User $user
+ * @var string $message
+ * @var array $roles
+ */
 
-assert($this instanceof Piko\View);
-assert($user instanceof Piko\UserModule\Models\User);
-
-/* @var $message array */
-/* @var $roles array */
+ use function Piko\I18n\__;
 
 $this->title = empty($user->id) ? __('user', 'Create user') : __('user', 'Edit user');
 $roleIds = $user->getRoleIds();

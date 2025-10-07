@@ -1,9 +1,8 @@
 <?php
 use function Piko\I18n\__;
 
-assert($this instanceof Piko\View);
-
 /**
+ * @var \Piko\View $this
  * @var boolean|array $message
  * @var boolean $canRegister
  */
@@ -78,6 +77,3 @@ $this->registerCSS($css);
     </div>
   <?php endif ?>
   </main>
-
-
-

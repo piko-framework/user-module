@@ -1,9 +1,10 @@
 <?php
-use Piko;
 use function Piko\I18n\__;
-assert($this instanceof Piko\View);
 
-/* @var $permissions array */
+/**
+ * @var \Piko\View $this
+ * @var array $permissions
+ */
 
 $this->title = __('user', 'Permissions');
 

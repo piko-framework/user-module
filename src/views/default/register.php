@@ -1,12 +1,12 @@
 <?php
-use piko\Piko;
-/* @var $this \piko\View */
-/* @var $router \piko\Router */
-/* @var $message array */
+use function Piko\I18n\__;
 
-$router = Piko::get('router');
+/**
+ * @var \Piko\View $this
+ * @var array $message
+ */
 
-$this->title = Piko::t('user', 'Register');
+$this->title = __('user', 'Register');
 
 if (is_array($message)) {
     $this->params['message'] = $message;
@@ -19,7 +19,7 @@ jQuery(document).ready(function($) {
     function validateField(e) {
         var that = this;
 
-        $.post('{$router->getUrl('user/default/check-registration')}', $('#register-form').serialize(), function(errors) {
+        $.post('{$this->getUrl('user/default/check-registration')}', $('#register-form').serialize(), function(errors) {
             if (errors[that.name]) {
                 $(that).addClass('is-invalid')
                  $(that).removeClass('is-valid')
@@ -50,33 +50,30 @@ $this->registerJs($js);
 
 <form method="post" id="register-form" novalidate>
   <div class="form-group">
-    <label for="username"><?= Piko::t('user', 'Username') ?></label>
+    <label for="username"><?= __('user', 'Username') ?></label>
     <input type="text" class="form-control" id="username" name="username" value="">
     <div class="invalid-feedback"></div>
   </div>
 
   <div class="form-group">
-    <label for="email"><?= Piko::t('user', 'Email') ?></label>
+    <label for="email"><?= __('user', 'Email') ?></label>
     <input type="text" class="form-control" id="email" name="email" value="">
     <div class="invalid-feedback"></div>
   </div>
 
   <div class="form-group">
-    <label for="password"><?= Piko::t('user', 'Password') ?></label>
+    <label for="password"><?= __('user', 'Password') ?></label>
     <input type="password" class="form-control" id="password" name="password" value="" autocomplete="off">
     <div class="invalid-feedback"></div>
   </div>
 
   <div class="form-group">
-    <label for="password2"><?= Piko::t('user', 'Confirm your password') ?></label>
+    <label for="password2"><?= __('user', 'Confirm your password') ?></label>
     <input type="password" class="form-control" id="password2" name="password2" value="" autocomplete="off">
     <div class="invalid-feedback"></div>
   </div>
 
-  <button type="submit" class="btn btn-primary"><?= Piko::t('user', 'Register') ?></button>
+  <button type="submit" class="btn btn-primary"><?= __('user', 'Register') ?></button>
 </form>
 
 </div>
-
-
-

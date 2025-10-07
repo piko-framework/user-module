@@ -12,8 +12,9 @@
 namespace Piko\UserModule\Controllers;
 
 use PDO;
+use Psr\Http\Message\ResponseInterface;
 use Piko\UserModule;
-use piko\HttpException;
+use Piko\HttpException;
 use Piko\User as PikoUser;
 use Piko\UserModule\Models\User;
 
@@ -28,24 +29,8 @@ use function Piko\I18n\__;
  */
 class DefaultController extends \Piko\Controller
 {
-    /**
-     * Current user
-     *
-     * @var PikoUser
-     */
-    protected PikoUser $user;
-
-    /**
-     * Application PDO connexion
-     *
-     * @var PDO
-     */
-    protected PDO $db;
-
-    public function __construct(PikoUser $user, PDO $db)
+    public function __construct(protected PikoUser $user, protected PDO $db)
     {
-        $this->user = $user;
-        $this->db = $db;
     }
 
     /**
@@ -94,9 +79,9 @@ class DefaultController extends \Piko\Controller
     /**
      * Validate registration (AJAX)
      *
-     * @return string
+     * @return ResponseInterface
      */
-    public function checkRegistrationAction()
+    public function checkRegistrationAction(): ResponseInterface
     {
         $errors = [];
         $this->layout = false;
@@ -121,10 +106,12 @@ class DefaultController extends \Piko\Controller
     /**
      * Render user activation confirmation
      *
+     * @param string $token The auth token
+     *
      * @throws HttpException
      * @return string
      */
-    public function confirmationAction($token)
+    public function confirmationAction($token): string
     {
         $user = User::findByAuthKey($token);
 
@@ -200,6 +187,8 @@ class DefaultController extends \Piko\Controller
 
     /**
      * Render and process reset password
+     *
+     * @param string $token The auth token
      *
      * @throws HttpException
      * @return string
@@ -309,7 +298,7 @@ class DefaultController extends \Piko\Controller
     /**
      * User logout
      */
-    public function logoutAction()
+    public function logoutAction(): void
     {
         $this->user->logout();
         $this->redirect('/');

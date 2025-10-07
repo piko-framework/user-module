@@ -1,7 +1,9 @@
 <?php
 use function Piko\I18n\__;
-/* @var $this \piko\View */
-/* @var $page string  */
+/**
+ * @var \Piko\View $this
+ * @var string $page
+ */
 
 ?>
 <ul class="nav nav-tabs my-3">

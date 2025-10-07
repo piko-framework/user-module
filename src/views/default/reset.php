@@ -1,10 +1,11 @@
 <?php
 use function Piko\I18n\__;
 
-assert($this instanceof Piko\View);
-
-/* @var $user piko\user\models\User */
-/* @var $message array */
+/**
+ * @var \Piko\View $this
+ * @var \Piko\UserModule\Models\User $user
+ * @var array $message
+ */
 
 $this->title = __('user', 'Change your account ({account}) password',['account' => $user->username]);
 
@@ -72,6 +73,3 @@ $this->registerJs($js);
 <?php endif ?>
 
 </div>
-
-
-

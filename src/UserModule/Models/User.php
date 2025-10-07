@@ -219,7 +219,7 @@ class User extends DbRecord implements \Piko\User\IdentityInterface
     #[Column]
     public string|stdClass|null $profil = null;
 
-    public static function setPDO(PDO $pdo)
+    public static function setPDO(PDO $pdo): void
     {
         static::$pdo = $pdo;
     }
@@ -439,30 +439,32 @@ class User extends DbRecord implements \Piko\User\IdentityInterface
     /**
      * Save the login time
      *
-     * @return boolean
+     * @return bool
      */
-    public function saveLoginTime()
+    public function saveLoginTime(): bool
     {
         $this->last_login_at = $this->getCurrentDatetime();
+
         return $this->save();
     }
 
     /**
      * Activate an user
      *
-     * @return boolean
+     * @return bool
      */
-    public function activate()
+    public function activate(): bool
     {
         $this->confirmed_at = $this->getCurrentDatetime();
+
         return $this->save();
     }
 
     /**
      * Check if the user is activated
-     * @return boolean
+     * @return bool
      */
-    public function isActivated()
+    public function isActivated(): bool
     {
         return empty($this->confirmed_at) ? false : true;
     }
@@ -470,9 +472,9 @@ class User extends DbRecord implements \Piko\User\IdentityInterface
     /**
      * Send Registration confirmation email
      *
-     * @return boolean Return false if fail to send email
+     * @return bool Return false if fail to send email
      */
-    public function sendRegistrationConfirmation(Router $router, SmtpMailer $mailer)
+    public function sendRegistrationConfirmation(Router $router, SmtpMailer $mailer): bool
     {
         $siteName = getenv('SITE_NAME');
         $baseUrl = $this->getAbsoluteBaseUrl();
@@ -508,7 +510,7 @@ class User extends DbRecord implements \Piko\User\IdentityInterface
      *
      * @return boolean Return false if fail to send email
      */
-    public function sendResetPassword(Router $router, SmtpMailer $mailer)
+    public function sendResetPassword(Router $router, SmtpMailer $mailer): bool
     {
         $siteName = getenv('SITE_NAME');
 
@@ -549,7 +551,7 @@ class User extends DbRecord implements \Piko\User\IdentityInterface
      *
      * @return array An array of user rows
      */
-    public static function find($filters = [], $order = '', $start = 0, $limit = 0)
+    public static function find($filters = [], $order = '', $start = 0, $limit = 0): array
     {
         $query = 'SELECT * FROM `user`';
         $where = [];
@@ -586,7 +588,7 @@ class User extends DbRecord implements \Piko\User\IdentityInterface
      * @param string $username
      * @return User|NULL
      */
-    public static function findByUsername($username)
+    public static function findByUsername($username): User
     {
         $st = static::$pdo->prepare('SELECT id FROM user WHERE username = ?');
         $st->bindParam(1, $username, \PDO::PARAM_STR);
@@ -611,7 +613,7 @@ class User extends DbRecord implements \Piko\User\IdentityInterface
      * @param string $email
      * @return User|NULL
      */
-    public static function findByEmail($email)
+    public static function findByEmail($email): ?User
     {
 
         $st = static::$pdo->prepare('SELECT id FROM user WHERE email = ?');
@@ -636,7 +638,7 @@ class User extends DbRecord implements \Piko\User\IdentityInterface
      * @param string $token
      * @return User|NULL
      */
-    public static function findByAuthKey($token)
+    public static function findByAuthKey($token): ?User
     {
         $st = static::$pdo->prepare('SELECT id FROM `user` WHERE `auth_key` = ?');
 
@@ -658,9 +660,9 @@ class User extends DbRecord implements \Piko\User\IdentityInterface
      * Validate password
      *
      * @param string $password
-     * @return boolean
+     * @return bool
      */
-    public function validatePassword($password)
+    public function validatePassword($password): bool
     {
         return $this->password == sha1($password);
     }
@@ -671,7 +673,7 @@ class User extends DbRecord implements \Piko\User\IdentityInterface
      * @param int $id
      * @return User|NULL
      */
-    public static function findIdentity($id)
+    public static function findIdentity($id): ?User
     {
         try {
             $user = new static(static::$pdo);
@@ -688,7 +690,7 @@ class User extends DbRecord implements \Piko\User\IdentityInterface
      * {@inheritDoc}
      * @see \piko\IdentityInterface::getId()
      */
-    public function getId()
+    public function getId(): int
     {
         return $this->id;
     }

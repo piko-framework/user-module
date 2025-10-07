@@ -1,5 +1,8 @@
 <?php
 use function Piko\I18n\__;
+/**
+ * @var \Piko\View $this
+ */
 
 assert($this instanceof Piko\View);
 
