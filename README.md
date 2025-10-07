@@ -9,13 +9,14 @@ User management module for [Piko](https://piko-framework.github.io/) based proje
 - Account and profile management
 - User management interface
 - Permissions management (RBAC)
+- Support for MYSQL ans Sqlite
 
 ## Installation
 
 1 - Install module via composer:
 
 ```bash
-composer require piko/user
+composer require piko/user-module
 ```
 
 2 - Edit your Piko config :
@@ -24,16 +25,15 @@ composer require piko/user
 [
   'components' => [
     // ...
-    'user' => [
-      'class' => 'piko\User',
-        'identityClass' => 'piko\user\models\User',
-        'accessCheckerClass' => 'piko\user\AccessChecker',
+    'Piko\User' => [
+        'identityClass' => 'Piko\UserModule\Models\User',
+        'checkAccess' => 'Piko\UserModule\AccessChecker::checkAccess'
     ],
   ],
   'modules' => [
     // ...
     'user' => [
-      'class' => 'piko\user\Module',
+      'class' => 'Piko\UserModule',
       'adminRole' => 'admin',
       'allowUserRegistration' => true
     ],
@@ -62,4 +62,3 @@ require(__DIR__ . '/vendor/autoload.php');
 - **/user/default/register** : Process user registration
 - **/user/default/edit** : User account form
 - **/user/admin/users** : Manage users, roles, permissions
-
