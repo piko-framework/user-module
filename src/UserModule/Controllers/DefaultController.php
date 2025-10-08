@@ -297,10 +297,13 @@ class DefaultController extends \Piko\Controller
 
     /**
      * User logout
+     *
+     * @return ResponseInterface
      */
-    public function logoutAction(): void
+    public function logoutAction(): ResponseInterface
     {
         $this->user->logout();
-        $this->redirect('/');
+
+        return $this->redirect('/');
     }
 }

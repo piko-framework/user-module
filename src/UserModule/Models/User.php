@@ -62,7 +62,7 @@ class User extends DbRecord implements \Piko\User\IdentityInterface
      *
      * @var PDO
      */
-    protected static PDO $pdo;
+    protected static ?PDO $pdo = null;
 
     /**
      * Minimum password length (register/reset scenario)
@@ -671,10 +671,14 @@ class User extends DbRecord implements \Piko\User\IdentityInterface
      * Find user by Id
      *
      * @param int $id
-     * @return User|NULL
+     * @return User|null
      */
     public static function findIdentity($id): ?User
     {
+        if (static::$pdo === null) {
+            return null;
+        }
+
         try {
             $user = new static(static::$pdo);
 

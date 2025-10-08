@@ -95,8 +95,10 @@ class AdminController extends \Piko\Controller
 
     /**
      * Delete users
+     *
+     * @return ResponseInterface
      */
-    public function deleteAction(): void
+    public function deleteAction(): ResponseInterface
     {
         $post = $this->request->getParsedBody();
         $ids = isset($post['items']) ? $post['items'] : [];
@@ -107,7 +109,7 @@ class AdminController extends \Piko\Controller
             $user->delete();
         }
 
-        $this->redirect($this->getUrl('user/admin/users'));
+        return $this->redirect($this->getUrl('user/admin/users'));
     }
 
     /**
@@ -162,8 +164,10 @@ class AdminController extends \Piko\Controller
 
     /**
      * Delete roles
+     *
+     * @return ResponseInterface
      */
-    public function deleteRolesAction(): void
+    public function deleteRolesAction(): ResponseInterface
     {
         $post = $this->request->getParsedBody();
         $ids = isset($post['items']) ? $post['items'] : [];
@@ -174,7 +178,7 @@ class AdminController extends \Piko\Controller
             $item->delete();
         }
 
-        $this->redirect($this->getUrl('user/admin/roles'));
+        return $this->redirect($this->getUrl('user/admin/roles'));
     }
 
     /**
@@ -225,8 +229,10 @@ class AdminController extends \Piko\Controller
 
     /**
      * Delete permissions
+     *
+     * @return ResponseInterface
      */
-    public function deletePermissionsAction(): void
+    public function deletePermissionsAction(): ResponseInterface
     {
         $post = $this->request->getParsedBody();
         $ids = isset($post['items']) ? $post['items'] : [];
@@ -237,6 +243,6 @@ class AdminController extends \Piko\Controller
             $item->delete();
         }
 
-        $this->redirect($this->getUrl('user/admin/permissions'));
+        return $this->redirect($this->getUrl('user/admin/permissions'));
     }
 }

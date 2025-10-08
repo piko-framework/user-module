@@ -13,6 +13,8 @@ namespace Piko\UserModule;
 
 use PDO;
 use Piko\ModularApplication;
+use Piko\User;
+use Piko\UserModule\Models\User as UserIdentity;
 use HttpSoft\Message\Response;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Server\MiddlewareInterface;
@@ -33,12 +35,22 @@ final class AuthMiddleware implements MiddlewareInterface
      */
     private ModularApplication $application;
 
+    /**
+     * @var User
+     */
+    private User $user;
+
     public function __construct(ModularApplication $app)
     {
         $this->application = $app;
 
         $pdo = $this->application->getComponent('PDO');
         assert($pdo instanceof PDO);
+
+        $this->user = $this->application->getComponent('Piko\User');
+        assert($this->user instanceof User);
+
+        UserIdentity::setPDO($pdo);
     }
 
     /**
@@ -47,9 +59,6 @@ final class AuthMiddleware implements MiddlewareInterface
      */
     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
     {
-        $user = $this->application->getComponent('Piko\User');
-        assert($user instanceof \Piko\User);
-
         $router = $this->application->getComponent('Piko\Router');
         assert($router instanceof \Piko\Router);
 
@@ -65,7 +74,7 @@ final class AuthMiddleware implements MiddlewareInterface
         $params = $request->getServerParams();
         $path = rtrim(parse_url($params['REQUEST_URI'], PHP_URL_PATH), '/');
 
-        if ($user->isGuest() && !in_array($path, $allowedUrls)) {
+        if ($this->user->isGuest() && !in_array($path, $allowedUrls)) {
 
             $response = new Response();
 
