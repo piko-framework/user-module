@@ -593,7 +593,7 @@ class User extends DbRecord implements \Piko\User\IdentityInterface
      * @param string $username
      * @return User|NULL
      */
-    public static function findByUsername($username): User
+    public static function findByUsername($username): ?User
     {
         $st = static::$pdo->prepare('SELECT id FROM user WHERE username = ?');
         $st->bindParam(1, $username, \PDO::PARAM_STR);
