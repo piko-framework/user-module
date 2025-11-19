@@ -14,13 +14,12 @@ namespace Piko\UserModule\Models;
 use PDO;
 use DateTime;
 use stdClass;
-use Piko\Router;
 use Piko\DbRecord;
 use RuntimeException;
 use Nette\Mail\Message;
 use Nette\Utils\Random;
 use Piko\UserModule\Rbac;
-use Nette\Mail\SmtpMailer;
+use Nette\Mail\Mailer;
 use Piko\DbRecord\Attribute\Table;
 use Piko\DbRecord\Attribute\Column;
 
@@ -472,16 +471,19 @@ class User extends DbRecord implements \Piko\User\IdentityInterface
     /**
      * Send Registration confirmation email
      *
+     * @param Mailer $mailer The Nette Mailer to use to send email
+     * @param callable $getUrl A callback to get the route url
+     *
      * @return bool Return false if fail to send email
      */
-    public function sendRegistrationConfirmation(Router $router, SmtpMailer $mailer): bool
+    public function sendRegistrationConfirmation(Mailer $mailer, callable $getUrl): bool
     {
         $siteName = getenv('SITE_NAME');
         $baseUrl = $this->getAbsoluteBaseUrl();
 
         $message = __('user', 'confirmation_mail_body', [
             'site_name' => $siteName,
-            'link' => $baseUrl . $router->getUrl('user/default/confirmation', ['token' => $this->auth_key]),
+            'link' => $baseUrl . $getUrl('user/default/confirmation', ['token' => $this->auth_key]),
             'base_url' => $baseUrl,
             'username' => $this->username,
         ]);
@@ -508,9 +510,12 @@ class User extends DbRecord implements \Piko\User\IdentityInterface
     /**
      * Send reset password email
      *
+     * @param Mailer $mailer The Nette Mailer to use to send email
+     * @param callable $getUrl A callback to get the route url
+     *
      * @return boolean Return false if fail to send email
      */
-    public function sendResetPassword(Router $router, SmtpMailer $mailer): bool
+    public function sendResetPassword(Mailer $mailer, callable $getUrl): bool
     {
         $siteName = getenv('SITE_NAME');
 
@@ -518,7 +523,7 @@ class User extends DbRecord implements \Piko\User\IdentityInterface
 
         $message = __('user', 'reset_password_mail_body', [
             'site_name' => $siteName,
-            'link' => $baseUrl . $router->getUrl('user/default/reset-password', ['token' => $this->auth_key]),
+            'link' => $baseUrl . $getUrl('user/default/reset-password', ['token' => $this->auth_key]),
             'username' => $this->username,
         ]);
 
@@ -692,7 +697,7 @@ class User extends DbRecord implements \Piko\User\IdentityInterface
 
     /**
      * {@inheritDoc}
-     * @see \piko\IdentityInterface::getId()
+     * @see \Piko\IdentityInterface::getId()
      */
     public function getId(): int
     {

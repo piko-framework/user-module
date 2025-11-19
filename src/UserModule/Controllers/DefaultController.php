@@ -17,6 +17,7 @@ use Piko\UserModule;
 use Piko\HttpException;
 use Piko\User as PikoUser;
 use Piko\UserModule\Models\User;
+use Nette\Mail\Mailer;
 
 use function Piko\I18n\__;
 
@@ -29,7 +30,7 @@ use function Piko\I18n\__;
  */
 class DefaultController extends \Piko\Controller
 {
-    public function __construct(protected PikoUser $user, protected PDO $db)
+    public function __construct(protected PikoUser $user, protected PDO $db, protected Mailer $mailer)
     {
     }
 
@@ -59,7 +60,7 @@ class DefaultController extends \Piko\Controller
             $user->bind($post);
 
             if ($user->isValid() && $user->save()) {
-                // $user->sendRegistrationConfirmation();
+                $user->sendRegistrationConfirmation($this->mailer, [$this, 'getUrl']);
                 $message['type'] = 'success';
                 $message['content'] = __(
                     'user',
@@ -162,10 +163,7 @@ class DefaultController extends \Piko\Controller
             }
 
             if ($user) {
-                $app = $this->module->getApplication();
-                $router = $app->getComponent('Piko\Router');
-                $mailer = $app->getComponent('Nette\Mail\SmtpMailer');
-                $user->sendResetPassword($router, $mailer);
+                $user->sendResetPassword($this->mailer, [$this, 'getUrl']);
                 $message['type'] = 'success';
                 $message['content'] = __(
                     'user',
