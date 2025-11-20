@@ -195,14 +195,6 @@ class User extends DbRecord implements \Piko\User\IdentityInterface
     public ?string $last_login_at = null;
 
     /**
-     * Indicates if the user is an administrator
-     *
-     * @var integer
-     */
-    #[Column]
-    public int $is_admin = 0;
-
-    /**
      * Timezone
      *
      * @var string

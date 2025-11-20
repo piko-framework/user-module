@@ -11,7 +11,6 @@ CREATE TABLE IF NOT EXISTS `user` (
   `created_at` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `last_login_at` DATETIME NULL DEFAULT NULL,
-  `is_admin` TINYINT(1) NOT NULL DEFAULT 0,
   `timezone` VARCHAR(40) DEFAULT '',
   `profil` TEXT NOT NULL DEFAULT '{}' COMMENT 'Json encoded profil',
   PRIMARY KEY  (`id`),
@@ -53,4 +52,3 @@ CREATE TABLE IF NOT EXISTS `auth_assignment` (
   CONSTRAINT `auth_assignment_ibfk_1` FOREIGN KEY (`role_id`) REFERENCES `auth_role` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT `auth_assignment_ibfk_2` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
