@@ -338,7 +338,7 @@ class User extends DbRecord implements \Piko\User\IdentityInterface
             unset($data['password2']);
         }
 
-        if (!empty($data['password']) && !$this->validatePassword($data['password'])) {
+        if (!empty($data['password'])) {
             $this->resetPassword = true;
         }
 
