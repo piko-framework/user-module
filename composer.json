@@ -13,7 +13,8 @@
 		"piko/framework" : "^3.4",
 		"piko/i18n": "^2.1",
 		"piko/user": "^2.0",
-		"nette/mail" : "^4.0"
+		"nette/mail" : "^4.0",
+		"ulrichsg/getopt-php": "^4.0"
 	},
 	"require-dev" : {
 		"phpunit/phpunit" : "^10.5",
@@ -21,8 +22,8 @@
 	},
 	"scripts" : {
 		"tests" : "phpunit",
-		"coding-standard" : "phpcs --standard=vendor/piko/core/coding-standard  --extensions=php --ignore='*/(vendor|views|messages|tests)/*' .",
-		"coding-standard-fix" : "phpcbf --standard=vendor/piko/core/coding-standard  --extensions=php --ignore='*/(vendor|views|messages|tests)/*' ."
+		"coding-standard" : "phpcs --standard=vendor/piko/core/coding-standard  --extensions=php --ignore='*/(vendor|views|messages|tests)/*,/env.php' .",
+		"coding-standard-fix" : "phpcbf --standard=vendor/piko/core/coding-standard  --extensions=php --ignore='*/(vendor|views|messages|tests)/*,/env.php' ."
 	},
 	"autoload" : {
 		"psr-4" : {
