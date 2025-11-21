@@ -49,9 +49,10 @@ class Rbac
         static::$db->beginTransaction();
         $st = static::$db->prepare($query);
         $st->execute([$name, $description]);
+        $id = static::$db->lastInsertId();
         static::$db->commit();
 
-        return static::$db->lastInsertId();
+        return (int) $id;
     }
 
     /**
@@ -216,9 +217,10 @@ class Rbac
         static::$db->beginTransaction();
         $st = static::$db->prepare($query);
         $st->execute([$name]);
+        $id = static::$db->lastInsertId();
         static::$db->commit();
 
-        return (int) static::$db->lastInsertId();
+        return (int) $id;
     }
 
     /**
