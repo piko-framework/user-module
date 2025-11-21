@@ -46,7 +46,10 @@ $config = [
         ]
     ],
     'modules' => [
-        'user' => 'Piko\UserModule',
+        'user' => [
+            'class' => 'Piko\UserModule',
+            'redirectUrlAfterLogin' => '/user/default/edit'
+        ],
     ],
     'bootstrap' => [
         'user'

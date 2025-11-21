@@ -61,6 +61,20 @@ class UserModule extends Module
      */
     public $passwordMinLength = 8;
 
+    /**
+     * URL to redirect to after successful login
+     *
+     * @var string
+     */
+    public $redirectUrlAfterLogin = '/';
+
+    /**
+     * URL to redirect to after logout
+     *
+     * @var string
+     */
+    public $redirectUrlAfterLogout = '/';
+
     public function bootstrap()
     {
         $pdo = $this->application->getComponent('PDO');

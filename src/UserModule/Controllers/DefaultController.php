@@ -28,6 +28,8 @@ use function Piko\I18n\__;
  *
  * Default user controller
  *
+ * @property UserModule $module
+ *
  * @author Sylvain PHILIP <contact@sphilip.com>
  */
 class DefaultController extends \Piko\Controller
@@ -279,15 +281,13 @@ class DefaultController extends \Piko\Controller
                 $this->user->login($identity);
                 $identity->saveLoginTime();
 
-                return $this->redirect('/');
+                return $this->redirect($this->module->redirectUrlAfterLogin);
 
             } else {
                 $message['type'] = 'danger';
                 $message['content'] = __('user', 'Authentication failure');
             }
         }
-
-        assert($this->module instanceof UserModule);
 
         return $this->render('login', [
             'message' => $message,
@@ -304,6 +304,6 @@ class DefaultController extends \Piko\Controller
     {
         $this->user->logout();
 
-        return $this->redirect('/');
+        return $this->redirect($this->module->redirectUrlAfterLogout);
     }
 }
