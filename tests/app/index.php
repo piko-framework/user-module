@@ -58,4 +58,10 @@ $app = new ModularApplication($config);
 $i18n = $app->getComponent('Piko\I18n');
 I18n::setInstance($i18n);
 
+/**@var \Piko\View $view */
+$view = $app->getComponent('Piko\View');
+
+// Inject the user component in the view
+$view->params['user'] = $app->getComponent('Piko\User');
+
 $app->run();
