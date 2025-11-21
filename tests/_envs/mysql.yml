@@ -1,0 +1,12 @@
+# `mysql` environment config goes here
+modules:
+    config:
+        Db:
+          dsn: 'mysql:host=%DB_HOST%;dbname=%DB_NAME%;charset=utf8mb4'
+          user: '%DB_USERNAME%'
+          password: '%DB_PASSWORD%'
+          dump:
+            - sql/install-mysql.sql
+            - tests/Support/Data/create-user.sql
+          populate: true
+          cleanup: true

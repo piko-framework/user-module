@@ -2,12 +2,10 @@
 namespace Tests\Unit;
 
 use Tests\Support\UnitTester;
+use Codeception\Attribute\Env;
 
 use PDO;
 use Piko\UserModule\Rbac;
-use Piko\UserModule\Commands\SetupCommand;
-use Piko\UserModule\Commands\UserCommand;
-
 
 class RbacTest extends \Codeception\Test\Unit
 {
@@ -17,23 +15,14 @@ class RbacTest extends \Codeception\Test\Unit
 
     protected function _before(): void
     {
-        $this->db = new PDO('sqlite::memory:');
-        $setupCmd = new SetupCommand();
-        $setupCmd->setPDO($this->db);
-        $setupCmd->install();
-
-        $userCmd = new UserCommand();
-        $userCmd->setPDO($this->db);
-        $userCmd->create([
-            'name' => 'Admin User',
-            'username' => 'admin',
-            'email' => 'admin@test.com',
-            'password' => 'testadmin'
-        ]);
+        /** @var \Codeception\Module\Db $dbModule */
+        $dbModule = $this->getModule('Db');
+        $this->db = $dbModule->_getDbh();
 
         Rbac::setPDO($this->db);
     }
 
+    #[Env('sqlite', 'mysql')]
     public function testCreateRole(): void
     {
         $this->assertFalse(Rbac::roleExists('guest'));
@@ -44,6 +33,7 @@ class RbacTest extends \Codeception\Test\Unit
         $this->assertTrue(Rbac::roleExists('guest'));
     }
 
+    #[Env('sqlite', 'mysql')]
     public function testCreatePermission(): void
     {
         $this->assertFalse(Rbac::permissionExists('can.edit'));
@@ -54,6 +44,7 @@ class RbacTest extends \Codeception\Test\Unit
         $this->assertTrue(Rbac::permissionExists('can.edit'));
     }
 
+    #[Env('sqlite', 'mysql')]
     public function testAssignPermission(): void
     {
         Rbac::createRole('author', 'Author role');
@@ -68,6 +59,7 @@ class RbacTest extends \Codeception\Test\Unit
         $this->assertContains('can.delete', $perms);
     }
 
+    #[Env('sqlite', 'mysql')]
     public function testAssignRole(): void
     {
         $userAdminId = 1;
@@ -78,6 +70,7 @@ class RbacTest extends \Codeception\Test\Unit
         $this->assertContains('author', $roles);
     }
 
+    #[Env('sqlite', 'mysql')]
     public function testGetUserPermissions(): void
     {
         $userAdminId = 1;

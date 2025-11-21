@@ -1,0 +1,12 @@
+# `sqlite` environment config goes here
+modules:
+    config:
+      Db:
+        dsn: 'sqlite:tests/_output/database.sqlite'
+        user: ''
+        password: ''
+        dump:
+          - sql/install-sqlite.sql
+          - tests/Support/Data/create-user.sql
+        populate: true
+        cleanup: true

@@ -20,7 +20,8 @@
         "squizlabs/php_codesniffer": "^3.5",
         "codeception/codeception": "^5.3",
         "codeception/module-phpbrowser": "*",
-        "codeception/module-asserts": "*"
+        "codeception/module-asserts": "*",
+        "codeception/module-db": "^3.2"
     },
     "scripts": {
         "tests": "phpunit",
