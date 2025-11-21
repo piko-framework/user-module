@@ -71,7 +71,7 @@ $this->registerCSS($css);
   </form>
 
   <?php if ($canRegister): ?>
-    <div class="p-3 border bg-light text-dark">
+    <div class="p-3 border">
       <p><?= __('user', 'No account yet?') ?></p>
       <p><a href="<?= $this->getUrl('user/default/register')?>" class="btn btn-primary"><?= __('user', 'Register') ?></a></p>
     </div>
