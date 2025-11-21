@@ -1,0 +1,95 @@
+<?php
+namespace Tests\Unit;
+
+use Tests\Support\UnitTester;
+
+use PDO;
+use Piko\UserModule\Rbac;
+use Piko\UserModule\Commands\SetupCommand;
+use Piko\UserModule\Commands\UserCommand;
+
+
+class RbacTest extends \Codeception\Test\Unit
+{
+    protected UnitTester $tester;
+
+    protected PDO $db;
+
+    protected function _before(): void
+    {
+        $this->db = new PDO('sqlite::memory:');
+        $setupCmd = new SetupCommand();
+        $setupCmd->setPDO($this->db);
+        $setupCmd->install();
+
+        $userCmd = new UserCommand();
+        $userCmd->setPDO($this->db);
+        $userCmd->create([
+            'name' => 'Admin User',
+            'username' => 'admin',
+            'email' => 'admin@test.com',
+            'password' => 'testadmin'
+        ]);
+
+        Rbac::setPDO($this->db);
+    }
+
+    public function testCreateRole(): void
+    {
+        $this->assertFalse(Rbac::roleExists('guest'));
+
+        $roleId = Rbac::createRole('guest', 'Guest role');
+        $this->assertEquals($roleId, Rbac::getRoleId('guest'));
+
+        $this->assertTrue(Rbac::roleExists('guest'));
+    }
+
+    public function testCreatePermission(): void
+    {
+        $this->assertFalse(Rbac::permissionExists('can.edit'));
+
+        $id = Rbac::createPermission('can.edit');
+        $this->assertEquals($id, Rbac::getPermissionId('can.edit'));
+
+        $this->assertTrue(Rbac::permissionExists('can.edit'));
+    }
+
+    public function testAssignPermission(): void
+    {
+        Rbac::createRole('author', 'Author role');
+        Rbac::createPermission('can.edit');
+        Rbac::createPermission('can.delete');
+
+        Rbac::assignPermission('author', 'can.edit');
+        Rbac::assignPermission('author', 'can.delete');
+
+        $perms = Rbac::getRolePermissions('author');
+        $this->assertContains('can.edit', $perms);
+        $this->assertContains('can.delete', $perms);
+    }
+
+    public function testAssignRole(): void
+    {
+        $userAdminId = 1;
+        Rbac::createRole('author', 'Author role');
+        Rbac::assignRole($userAdminId, 'author');
+        $roles = Rbac::getUserRoles($userAdminId);
+        $this->assertContains('admin', $roles);
+        $this->assertContains('author', $roles);
+    }
+
+    public function testGetUserPermissions(): void
+    {
+        $userAdminId = 1;
+        Rbac::createRole('director', 'Director role');
+        Rbac::assignRole($userAdminId, 'director');
+        Rbac::createPermission('can.edit');
+        Rbac::createPermission('document.can.delete');
+        Rbac::assignPermission('director', 'can.edit');
+        Rbac::assignPermission('director', 'document.can.delete');
+
+        $perms = Rbac::getUserPermissions($userAdminId);
+        $this->assertContains('can.edit', $perms);
+        $this->assertContains('document.can.delete', $perms);
+    }
+}
