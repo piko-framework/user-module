@@ -5,6 +5,14 @@ use Piko\I18n;
 
 require realpath(__DIR__ . '/../../vendor/autoload.php');
 
+$envFile = realpath(__DIR__ . '/../../env.php');
+
+if ($envFile) {
+    foreach (require $envFile as $key => $val) {
+        putenv("{$key}={$val}");
+    }
+}
+
 $config = [
     'basePath' => realpath(__DIR__),
     'defaultLayoutPath' => '@app/layouts',
@@ -28,7 +36,9 @@ $config = [
         ],
         'PDO' => [
             'construct' => [
-                'sqlite:' . __DIR__ . '/../runtime/app.sqlite'
+                getenv('DSN'),
+                getenv('DB_USERNAME') ? getenv('DB_USERNAME') : null,
+                getenv('DB_PASSWORD')  ? getenv('DB_PASSWORD') : null,
             ]
         ],
         'Nette\Mail\Mailer' => [
