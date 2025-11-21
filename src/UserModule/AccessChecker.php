@@ -9,6 +9,8 @@
  * @link https://github.com/piko-framework/user-module
  */
 
+declare(strict_types=1);
+
 namespace Piko\UserModule;
 
 use Piko\UserModule\Models\User;

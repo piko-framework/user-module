@@ -16,6 +16,8 @@
  * /user/admin/users : Manage users, roles, permissions
  */
 
+declare(strict_types=1);
+
 namespace Piko;
 
 use PDO;
