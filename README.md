@@ -42,19 +42,16 @@ composer require piko/user-module
 ]
 ```
 
-3 - Install module tables. Create a php file at the root folder of your project (ex: install.php) and put this code :
+3 - Install the module tables and create an admin user.
 
-```php
-require(__DIR__ . '/vendor/autoload.php');
+```bash
+export DSN=mysql:host=127.0.0.1;dbname=yourdatabase;charset=utf8mb4
+export DB_USERNAME=mysqluser
+export DB_PASSWORD=yourpassword
 
-(new \piko\Application(require __DIR__ . '/config.php'));
-
-\piko\user\Module::install();
-\piko\user\Module::createUser();
+./vendor/bin/user-module setup:install
+./vendor/bin/user-module user:create -i
 ```
-
-4 - Execute install.php on the command line : `php install.php` and follow instructions to create the admin user.
-
 
 ## Routes
 - **/user/default/login** : Process login

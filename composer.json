@@ -23,6 +23,7 @@
         "codeception/module-asserts": "*",
         "codeception/module-db": "^3.2"
     },
+    "bin": ["bin/user-module"],
     "scripts": {
         "tests": "phpunit",
         "coding-standard": "phpcs --standard=vendor/piko/core/coding-standard  --extensions=php --ignore='*/(vendor|views|messages|tests)/*,/env.php' .",
