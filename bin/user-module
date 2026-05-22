@@ -19,7 +19,9 @@ use GetOpt\Option;
 
 use Piko\UserModule\Commands\AbstractCommand;
 
-require __DIR__ . '/../autoload.php';
+if (isset($GLOBALS['_composer_autoload_path'])) {
+    require $GLOBALS['_composer_autoload_path'];
+}
 
 function getPDO(): PDO
 {
