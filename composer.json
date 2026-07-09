@@ -14,7 +14,8 @@
         "piko/i18n": "^2.1",
         "piko/user": "^2.0",
         "nette/mail": "^4.0",
-        "ulrichsg/getopt-php": "^4.0"
+        "ulrichsg/getopt-php": "^4.0",
+        "piko/migrate": "^1.0"
     },
     "require-dev": {
         "squizlabs/php_codesniffer": "^3.5",

@@ -49,7 +49,9 @@ export DSN=mysql:host=127.0.0.1;dbname=yourdatabase;charset=utf8mb4
 export DB_USERNAME=mysqluser
 export DB_PASSWORD=yourpassword
 
-./vendor/bin/user-module setup:install
+# Install the module tables
+./vendor/bin/migrate -p ./vendor/piko/user-module/migrations
+# Create interactively an admin user
 ./vendor/bin/user-module user:create -i
 ```
 

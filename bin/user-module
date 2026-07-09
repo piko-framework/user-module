@@ -16,12 +16,11 @@
 use GetOpt\GetOpt;
 use GetOpt\Command;
 use GetOpt\Option;
+use Piko\I18n;
+use Piko\UserModule\Models\User;
+use Piko\UserModule\Rbac;
 
-use Piko\UserModule\Commands\AbstractCommand;
-
-if (isset($GLOBALS['_composer_autoload_path'])) {
-    require $GLOBALS['_composer_autoload_path'];
-}
+require $GLOBALS['_composer_autoload_path'] ?? __DIR__ . '/../vendor/autoload.php';
 
 function getPDO(): PDO
 {
@@ -39,6 +38,61 @@ function getPDO(): PDO
     return $pdo;
 }
 
+function successMsg(string $message): string
+{
+    $green = "\033[32m";
+    $reset = "\033[0m";
+
+    return $green . $message . $reset;
+}
+
+function errorMsg(string $message): string
+{
+    $red = "\033[31m";
+    $reset = "\033[0m";
+
+    return $red . $message . $reset;
+}
+
+function createUserCommand(PDO $db, array $options = []): int
+{
+    $interactive = (bool) ($options['interactive'] ?? false);
+
+    if ($interactive) {
+        echo "=== Create a new admin user ===\n";
+
+        $options['name'] = readline("Enter Full Name: ");
+        $options['email'] = readline("Enter Email Address: ");
+        $options['username'] = readline("Choose a Username: ");
+        $options['password'] = readline("Choose a Password: ");
+    }
+
+    Rbac::setPDO($db);
+
+    if (!Rbac::roleExists('admin')) {
+        echo "Admin role does not exist. Creating 'admin' role...\n";
+        Rbac::createRole('admin');
+    }
+
+    $user = new User($db);
+    $user->scenario = User::SCENARIO_ADMIN;
+    $user->bind($options);
+
+    if ($user->isValid() && $user->save()) {
+
+        Rbac::assignRole($user->id, 'admin');
+        echo successMsg("Success! The admin user '{$user->username}' was created.\n
+        You can now log in with this account.\n");
+
+        return 0;
+    }
+
+    echo errorMsg("User creation failed for the following reasons:
+    \n" . implode("\n- ", $user->getErrors()) . PHP_EOL);
+
+    return 1;
+}
+
 $workingDir = getcwd();
 
 if (file_exists($workingDir . '/env.php')) {
@@ -47,13 +101,15 @@ if (file_exists($workingDir . '/env.php')) {
     }
 }
 
+$i18n = new I18n();
+I18n::setInstance($i18n);
+
 $getopt = new GetOpt([
     Option::create('h', 'help')->setDescription('Displays help')
 ]);
 
 $getopt->addCommands([
-    Command::create('setup:install', '\Piko\UserModule\Commands\SetupCommand::install')->setDescription('Install the user tables in your database'),
-    Command::create('user:create', '\Piko\UserModule\Commands\UserCommand::create', [
+    Command::create('user:create', 'createUserCommand', [
     Option::create('n', 'name', GetOpt::OPTIONAL_ARGUMENT)->setDescription('Full name of the user'),
     Option::create('e', 'email', GetOpt::REQUIRED_ARGUMENT)->setDescription('Email address for the user'),
     Option::create('u', 'username', GetOpt::REQUIRED_ARGUMENT)->setDescription('Username for user login'),
@@ -79,14 +135,13 @@ if (!$command) {
 
 } else {
 
-    list ($class, $method) = explode('::', $command->getHandler());
-
-    /** @var AbstractCommand $controller */
-    $controller = new $class();
+    $handler = $command->getHandler();
     $pdo = getPDO();
-    $controller->setPDO($pdo);
+    $code = -1;
 
-    $code = (int) call_user_func([$controller, $method], $getopt->getOptions());
+    if ($handler === 'createUserCommand') {
+        $code = createUserCommand($pdo, $getopt->getOptions());
+    }
 
     exit($code);
 }

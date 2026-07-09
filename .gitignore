@@ -2,3 +2,4 @@ vendor
 composer.lock
 .phpactor.json
 env.php
+env.test.php

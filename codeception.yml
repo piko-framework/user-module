@@ -12,4 +12,4 @@ extensions:
         - Codeception\Extension\RunFailed
 params:
   - env
-  - env.php
+  - env.test.php
