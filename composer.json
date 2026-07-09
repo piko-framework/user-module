@@ -27,8 +27,8 @@
     "bin": ["bin/user-module"],
     "scripts": {
         "tests": "codecept run --env sqlite --env mysql",
-        "coding-standard": "phpcs --standard=vendor/piko/core/coding-standard  --extensions=php --ignore='*/(vendor|views|messages|tests)/*,/env.php' .",
-        "coding-standard-fix": "phpcbf --standard=vendor/piko/core/coding-standard  --extensions=php --ignore='*/(vendor|views|messages|tests)/*,/env.php' ."
+        "coding-standard": "phpcs --standard=vendor/piko/core/coding-standard  --extensions=php --ignore='*/(vendor|views|messages|tests|migrations)/*,/env.*' .",
+        "coding-standard-fix": "phpcbf --standard=vendor/piko/core/coding-standard  --extensions=php --ignore='*/(vendor|views|messages|tests|migrations)/*,/env.*' ."
     },
     "autoload": {
         "psr-4": {
