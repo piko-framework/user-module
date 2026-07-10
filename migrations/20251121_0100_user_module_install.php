@@ -21,6 +21,17 @@ return new class
 
     public function down(PDO $db): void
     {
+        $sql = '
+            DROP TABLE IF EXISTS auth_assignment;
+            DROP TABLE IF EXISTS auth_role_has_permission;
+            DROP TABLE IF EXISTS auth_permission;
+            DROP TABLE IF EXISTS auth_role;
+            DROP TABLE IF EXISTS user;
+        ';
 
+        if ($db->exec($sql) === false) {
+            $error = $db->errorInfo();
+            throw new Exception("Database error [{$error[0]}]: {$error[2]}\n");
+        }
     }
 };
