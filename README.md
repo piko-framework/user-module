@@ -50,7 +50,7 @@ export DB_USERNAME=mysqluser
 export DB_PASSWORD=yourpassword
 
 # Install the module tables
-./vendor/bin/migrate -p ./vendor/piko/user-module/migrations
+./vendor/bin/migrate run -p ./vendor/piko/user-module/migrations
 # Create interactively an admin user
 ./vendor/bin/user-module user:create -i
 ```
